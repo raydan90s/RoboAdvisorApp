@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
@@ -8,13 +9,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Cargando, ErrorEstado } from '@/components/shared/Estados';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/services/http';
-import type { InvestorStackParamList } from '@/types/navigation';
+import type { ComoSeCalculoParams } from '@/types/navigation';
 import { usd } from '@/utils/formato';
 
 import { getBreakdown } from '../services/investorApi';
 import type { ProfilingBreakdown } from '../types/inversionista';
 
-type Props = NativeStackScreenProps<InvestorStackParamList, 'ComoSeCalculo'>;
+/** La misma pantalla se registra en los dos stacks —el cliente ve la suya, el asesor
+ *  abre la de su cliente— así que toma sus params por hook y no por props tipadas
+ *  contra un stack concreto. */
+type Ruta = RouteProp<{ ComoSeCalculo: ComoSeCalculoParams }, 'ComoSeCalculo'>;
 
 /**
  * HU1, criterio 3: **el usuario entiende cómo influyó cada respuesta en su perfil.**
@@ -25,23 +29,30 @@ type Props = NativeStackScreenProps<InvestorStackParamList, 'ComoSeCalculo'>;
  * puntajes en `scoring_rules`, esta pantalla cambia sola. Esa es justamente la prueba de
  * que las reglas son la fuente de verdad y no un número escrito a mano.
  */
-export default function ComoSeCalculoPage({ navigation, route }: Props) {
+export default function ComoSeCalculoPage() {
+  const navigation = useNavigation();
+  const route = useRoute<Ruta>();
   const { user } = useAuth();
+
   const sessionId = route.params?.sessionId;
+  // Sin `investorId` en los params, la pantalla es la del propio usuario. El asesor sí
+  // lo pasa, junto con la sesión que originó *esa* propuesta: si el cliente se volvió a
+  // perfilar, la última sesión ya no es la que está revisando.
+  const investorId = route.params?.investorId ?? user?.id;
 
   const [datos, setDatos] = useState<ProfilingBreakdown | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const cargar = useCallback(async () => {
-    if (!user) return;
+    if (!investorId) return;
     setError(null);
     setDatos(null);
     try {
-      setDatos(await getBreakdown(user.id, sessionId));
+      setDatos(await getBreakdown(investorId, sessionId));
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'No se pudo cargar el desglose.');
     }
-  }, [user, sessionId]);
+  }, [investorId, sessionId]);
 
   useEffect(() => {
     void cargar();
@@ -64,6 +75,7 @@ export default function ComoSeCalculoPage({ navigation, route }: Props) {
   }
 
   const total = datos.respuestas.reduce((suma, r) => suma + r.puntos, 0);
+  const esPropio = datos.investor_id === user?.id;
 
   return (
     <SafeAreaView className="flex-1 bg-surface-background">
@@ -84,7 +96,7 @@ export default function ComoSeCalculoPage({ navigation, route }: Props) {
         <View className="flex-row items-center justify-between rounded-2xl border border-surface-border bg-surface-background px-5 py-4">
           <View className="gap-1">
             <Text className="text-caption uppercase text-text-secondary">
-              Tu puntaje
+              {esPropio ? 'Tu puntaje' : 'Puntaje del cliente'}
             </Text>
             <Text className="text-hero font-bold text-text-primary">
               {datos.puntaje}
@@ -107,7 +119,7 @@ export default function ComoSeCalculoPage({ navigation, route }: Props) {
         <View className="overflow-hidden rounded-2xl border border-surface-border bg-surface-background">
           <View className="flex-row justify-between bg-surface-secondary px-5 py-3">
             <Text className="text-caption font-bold uppercase text-text-secondary">
-              Tu respuesta
+              {esPropio ? 'Tu respuesta' : 'Respuesta'}
             </Text>
             <Text className="text-caption font-bold uppercase text-text-secondary">
               Puntos
@@ -151,7 +163,7 @@ export default function ComoSeCalculoPage({ navigation, route }: Props) {
             </Text>{' '}
             corresponde al perfil{' '}
             <Text className="font-bold">{datos.perfil_nombre ?? datos.perfil_code}</Text>.
-            Tu puntaje de <Text className="font-bold">{datos.puntaje}</Text> cae en ese
+            Un puntaje de <Text className="font-bold">{datos.puntaje}</Text> cae en ese
             rango.
           </Text>
         </View>

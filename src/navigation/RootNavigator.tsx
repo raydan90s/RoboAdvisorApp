@@ -1,7 +1,11 @@
+import { Ionicons } from '@expo/vector-icons';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, View } from 'react-native';
 
+import AuditoriaPage from '@/app/asesor/pages/AuditoriaPage';
 import ColaRevisionPage from '@/app/asesor/pages/ColaRevisionPage';
+import DetallePropuestaPage from '@/app/asesor/pages/DetallePropuestaPage';
 import LoginPage from '@/app/auth/pages/LoginPage';
 import ComoSeCalculoPage from '@/app/inversionista/pages/ComoSeCalculoPage';
 import CuestionarioPage from '@/app/inversionista/pages/CuestionarioPage';
@@ -10,6 +14,7 @@ import PropuestaPage from '@/app/inversionista/pages/PropuestaPage';
 import { useAuth } from '@/context/AuthContext';
 import type {
   AdvisorStackParamList,
+  AdvisorTabParamList,
   AuthStackParamList,
   InvestorStackParamList,
 } from '@/types/navigation';
@@ -17,6 +22,7 @@ import type {
 const Auth = createNativeStackNavigator<AuthStackParamList>();
 const Investor = createNativeStackNavigator<InvestorStackParamList>();
 const Advisor = createNativeStackNavigator<AdvisorStackParamList>();
+const AdvisorTab = createBottomTabNavigator<AdvisorTabParamList>();
 
 const sinHeader = { headerShown: false } as const;
 
@@ -45,10 +51,49 @@ function InvestorStack() {
   );
 }
 
+/** Cola y auditoría son dos listas independientes: el asesor salta entre ellas, no
+ *  las recorre en orden. Eso son tabs. */
+function AdvisorTabs() {
+  return (
+    <AdvisorTab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: '#1E3A8A',
+        tabBarInactiveTintColor: '#A1A1AA',
+      }}
+    >
+      <AdvisorTab.Screen
+        name="ColaRevision"
+        component={ColaRevisionPage}
+        options={{
+          title: 'Cola',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="layers-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <AdvisorTab.Screen
+        name="Auditoria"
+        component={AuditoriaPage}
+        options={{
+          title: 'Auditoría',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="time-outline" color={color} size={size} />
+          ),
+        }}
+      />
+    </AdvisorTab.Navigator>
+  );
+}
+
+/** El detalle va apilado encima de los tabs: mientras el asesor decide, la barra de
+ *  navegación no está ahí para que se distraiga y deje la decisión a medias. */
 function AdvisorStack() {
   return (
     <Advisor.Navigator screenOptions={sinHeader}>
-      <Advisor.Screen name="ColaRevision" component={ColaRevisionPage} />
+      <Advisor.Screen name="Tabs" component={AdvisorTabs} />
+      <Advisor.Screen name="DetallePropuesta" component={DetallePropuestaPage} />
+      <Advisor.Screen name="ComoSeCalculo" component={ComoSeCalculoPage} />
     </Advisor.Navigator>
   );
 }
@@ -56,8 +101,6 @@ function AdvisorStack() {
 /**
  * Único punto donde se decide qué ve el usuario. Al cambiar `token`/`role` el
  * árbol se remonta: por eso `logout()` no necesita navegar a ningún lado.
- *
- * Fase 4 reemplaza estos stacks por InvestorTabs / AdvisorTabs (bottom-tabs).
  */
 export default function RootNavigator() {
   const { token, role, isLoading } = useAuth();

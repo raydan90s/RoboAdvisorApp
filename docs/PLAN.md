@@ -276,9 +276,30 @@ Orden estricto por dependencia. No empieces la siguiente sin cerrar la anterior.
    **Verificado:** `tsc --noEmit` limpio · `expo export --platform web` bundlea (1,42 MB) ·
    los cuatro endpoints contestan con exactamente las formas que declaran los tipos
    (Juan: 12/15 → moderado → 60% USD 12.000 / 40% USD 8.000, ambos AAA con fuente y fecha).
-6. [ ] Pantallas del asesor:
-   - `ColaRevisionPage` → `DetallePropuestaPage` → botones Aprobar / Editar / Rechazar
-   - `AuditoriaPage` — timeline de `v_audit_timeline`
+6. [x] **Pantallas del asesor · HECHAS (11-jul).** Tabs (Cola · Auditoría) con el detalle
+       apilado encima: mientras decide, el asesor no tiene barra de navegación que lo
+       saque a medias.
+   - [x] `ColaRevisionPage` → `DetallePropuestaPage` → Aprobar / Editar / Rechazar.
+         Rechazar exige comentario; editar muestra la **suma en vivo** de los % y solo
+         habilita el botón en 100. El servidor revalida las dos cosas: acá se acompaña la
+         regla, no se reimplementa. El **409** de "ya fue decidida" no se reintenta, se
+         muestra.
+   - [x] `AuditoriaPage` — `v_audit_timeline` pintado tal cual, con fecha, responsable y
+         versión de reglas.
+   - [x] `ComoSeCalculoPage` se registra en **los dos** stacks: el asesor la abre con el
+         `?session_id=` que originó *esa* propuesta (para eso existía el parámetro).
+
+   > ⚠️ **`audit_log` no guarda las acciones que uno supondría.** Guarda el par
+   > (`entity_type`, `action`): `proposal/created` y `advisor_review/approved` — no
+   > `proposal_approved`. La primera versión de `AuditoriaPage` mapeaba nombres inventados
+   > y habría mostrado el código crudo en pantalla. Está corregida contra los pares reales,
+   > y ante un par desconocido muestra el código antes que una etiqueta que mienta.
+
+   **Verificado:** `tsc --noEmit` limpio · `expo export --platform web` bundlea (1,48 MB) ·
+   cola, detalle y auditoría contestan con las formas que declaran los tipos. La bandera
+   determinista de Juan aparece de verdad: *"el puntaje (12) está en el borde del rango
+   del perfil Moderado (9–12)"*. **No se decidió ninguna propuesta en la verificación**:
+   Juan y Andrea siguen `pending_review` para el video.
 7. [ ] El agente: `AgentSheet` con burbuja de chat + **source chips tocables**.
 
 **No saltes `ComoSeCalculoPage` ni el banner de disclaimer.** Son criterios de aceptación
