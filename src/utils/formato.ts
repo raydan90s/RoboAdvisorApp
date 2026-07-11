@@ -64,3 +64,26 @@ export function fechaHora(iso: string | null | undefined): string {
 export function plazo(dias: number | null | undefined): string {
   return dias == null ? 'Sin plazo fijo' : `${dias} días`;
 }
+
+/**
+ * 12 y 15 → "12 / 15 puntos". El máximo lo sirve la BD (es el mayor `max_score` de la
+ * versión de reglas con la que se puntuó esa sesión), así que si un día cambian los
+ * puntajes esta cifra cambia sola. Si no viene, se muestra el puntaje solo: es mejor no
+ * decir el denominador que inventarlo.
+ */
+export function puntos(puntaje: number, maximo: number | null | undefined): string {
+  return maximo == null ? `${puntaje} puntos` : `${puntaje} / ${maximo} puntos`;
+}
+
+/**
+ * "20.000" o "20000" → 20000. El usuario escribe con separadores ecuatorianos y la API
+ * espera un número; esto es lectura de un input, no aritmética de negocio.
+ */
+export function montoANumero(texto: string): number {
+  const limpio = texto
+    .replace(/[^\d,.]/g, '')
+    .replace(/\./g, '')
+    .replace(',', '.');
+  const valor = Number(limpio);
+  return Number.isFinite(valor) ? valor : 0;
+}

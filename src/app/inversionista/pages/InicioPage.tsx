@@ -12,7 +12,7 @@ import { useAuth } from '@/context/AuthContext';
 import HomeHeader from '@/screens/inicio/home/components/HomeHeader';
 import { ApiError } from '@/services/http';
 import type { InvestorStackParamList } from '@/types/navigation';
-import { usd } from '@/utils/formato';
+import { puntos, usd } from '@/utils/formato';
 
 import { getInvestor } from '../services/investorApi';
 import type { Investor } from '../types/inversionista';
@@ -113,7 +113,7 @@ export default function InicioPage({ navigation }: Props) {
                   {perfil.perfil_riesgo}
                 </Text>
                 <Text className="text-body text-text-secondary">
-                  {perfil.puntaje} / 15 puntos
+                  {puntos(perfil.puntaje, perfil.puntaje_max)}
                   {perfil.monto != null ? ` · ${usd(perfil.monto)} a invertir` : ''}
                 </Text>
               </View>

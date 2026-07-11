@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import BotonAtras from '@/components/shared/BotonAtras';
 import Calificacion from '@/components/shared/Calificacion';
 import EstadoBadge from '@/components/shared/EstadoBadge';
 import { Cargando, ErrorEstado } from '@/components/shared/Estados';
@@ -140,9 +141,7 @@ export default function DetallePropuestaPage({ navigation, route }: Props) {
       <StatusBar style="dark" />
 
       <View className="flex-row items-center gap-3 border-b border-surface-border px-5 py-4">
-        <TouchableOpacity onPress={navigation.goBack} activeOpacity={0.7}>
-          <Text className="text-body font-bold text-brand-primary">Atrás</Text>
-        </TouchableOpacity>
+        <BotonAtras onPress={navigation.goBack} />
         <Text className="flex-1 text-heading font-bold text-text-primary" numberOfLines={1}>
           {detalle.investor_nombre}
         </Text>

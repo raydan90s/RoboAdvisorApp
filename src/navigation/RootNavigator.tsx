@@ -11,8 +11,11 @@ import ComoSeCalculoPage from '@/app/inversionista/pages/ComoSeCalculoPage';
 import ComparadorPage from '@/app/inversionista/pages/ComparadorPage';
 import CuestionarioPage from '@/app/inversionista/pages/CuestionarioPage';
 import InicioPage from '@/app/inversionista/pages/InicioPage';
+import MisSubcuentasPage from '@/app/inversionista/pages/MisSubcuentasPage';
+import NuevaSubcuentaPage from '@/app/inversionista/pages/NuevaSubcuentaPage';
 import PropuestaPage from '@/app/inversionista/pages/PropuestaPage';
 import SimuladorPage from '@/app/inversionista/pages/SimuladorPage';
+import SubcuentaDetallePage from '@/app/inversionista/pages/SubcuentaDetallePage';
 import { useAuth } from '@/context/AuthContext';
 import type {
   AdvisorStackParamList,
@@ -37,17 +40,25 @@ function AuthStack() {
 }
 
 /**
- * El flujo del inversionista es lineal —perfilarse, ver la propuesta, entender el
- * puntaje— así que es un stack y no unos tabs: una pestaña "Propuesta" para alguien
- * que todavía no se perfiló solo podría mostrar un 404. Los tabs son del asesor, que
- * sí tiene dos listas independientes (cola y auditoría).
+ * El flujo del inversionista es lineal —ver sus carteras, abrir una, crear otra— así que
+ * es un stack y no unos tabs. Los tabs son del asesor, que sí tiene dos listas
+ * independientes (cola y auditoría).
+ *
+ * `Inicio` / `Cuestionario` / `Propuesta` son el flujo de una sola cartera, que sigue
+ * registrado a propósito: si las subcuentas no llegan al domingo, volver a él es cambiar
+ * `initialRouteName` a `Inicio` — no revertir pantallas a mano.
  */
 function InvestorStack() {
   return (
-    <Investor.Navigator screenOptions={sinHeader}>
+    <Investor.Navigator screenOptions={sinHeader} initialRouteName="MisSubcuentas">
+      <Investor.Screen name="MisSubcuentas" component={MisSubcuentasPage} />
+      <Investor.Screen name="NuevaSubcuenta" component={NuevaSubcuentaPage} />
+      <Investor.Screen name="SubcuentaDetalle" component={SubcuentaDetallePage} />
+
       <Investor.Screen name="Inicio" component={InicioPage} />
       <Investor.Screen name="Cuestionario" component={CuestionarioPage} />
       <Investor.Screen name="Propuesta" component={PropuestaPage} />
+
       <Investor.Screen name="ComoSeCalculo" component={ComoSeCalculoPage} />
       <Investor.Screen name="Comparador" component={ComparadorPage} />
       <Investor.Screen name="Simulador" component={SimuladorPage} />
