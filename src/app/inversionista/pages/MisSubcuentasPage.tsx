@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import AgenteFab from '@/app/agente/components/AgenteFab';
 import DisclaimerBanner from '@/components/shared/DisclaimerBanner';
 import { Cargando, ErrorEstado } from '@/components/shared/Estados';
 import { COLORES } from '@/constants/colores';
@@ -288,6 +289,10 @@ export default function MisSubcuentasPage({ navigation }: Props) {
               </Text>
             </TouchableOpacity>
           </View>
+
+          {/* El asistente, elevado sobre la barra sticky. Sin sessionId conoce el
+              capital y todas las subcuentas para responder del panorama completo. */}
+          <AgenteFab bottom={96} />
         </>
       ) : null}
     </SafeAreaView>

@@ -11,7 +11,14 @@ import AgentSheet from './AgentSheet';
  * Si se le pasa `sessionId`, la conversación es sobre esa subcuenta (lo usa el botón
  * "conversar sobre esta subcuenta"); sin él, el backend toma la sesión más reciente.
  */
-export default function AgenteFab({ sessionId }: { sessionId?: string }) {
+export default function AgenteFab({
+  sessionId,
+  bottom = 24,
+}: {
+  sessionId?: string;
+  /** Separación desde abajo. Se sube cuando la pantalla tiene una barra sticky. */
+  bottom?: number;
+}) {
   const [abierto, setAbierto] = useState(false);
 
   return (
@@ -23,7 +30,7 @@ export default function AgenteFab({ sessionId }: { sessionId?: string }) {
         style={{
           position: 'absolute',
           right: 20,
-          bottom: 24,
+          bottom,
           shadowColor: '#1E3A8A',
           shadowOffset: { width: 0, height: 6 },
           shadowOpacity: 0.3,
