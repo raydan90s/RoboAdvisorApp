@@ -1,22 +1,21 @@
 {
   "expo": {
-    "name": "RoboAdvisorApp",
+    "name": "Brokeate",
     "slug": "RoboAdvisorApp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "roboadvisorapp",
+    "icon": "./assets/images/logoInicioApp.png",
+    "scheme": "brokeate",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
       "icon": "./assets/expo.icon"
     },
     "android": {
+      "package": "com.brokeate.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/images/android-icon-foreground.png"
       },
       "predictiveBackGestureEnabled": false
     },
@@ -29,9 +28,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "backgroundColor": "#FFFFFF",
+          "image": "./assets/images/logoSinFondo.png",
+          "imageWidth": 220
         }
       ],
       "expo-secure-store",
