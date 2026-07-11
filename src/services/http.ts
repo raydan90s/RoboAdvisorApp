@@ -1,14 +1,12 @@
-import * as SecureStore from 'expo-secure-store';
+import { getToken } from './tokenStorage';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? '';
-const TOKEN_KEY = 'user_token';
 
-export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-}
-
+/**
+ * FastAPI devuelve el objeto plano (no hay sobre { success, data }) y reporta los
+ * errores como { detail }, donde `detail` es un string o —en los 422 de Pydantic—
+ * una lista de problemas de validación. Este cliente habla ese idioma.
+ */
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -20,29 +18,66 @@ export class ApiError extends Error {
   }
 }
 
+interface ValidationIssue {
+  msg: string;
+  loc?: (string | number)[];
+}
+
+function mensajeDeError(body: unknown, status: number): string {
+  const detail = (body as { detail?: unknown } | null)?.detail;
+
+  if (typeof detail === 'string') return detail;
+
+  // 422 de Pydantic: [{ loc: ['body','email'], msg: '...' }, ...]
+  if (Array.isArray(detail)) {
+    const msgs = (detail as ValidationIssue[]).map((d) => d.msg).filter(Boolean);
+    if (msgs.length) return msgs.join('. ');
+  }
+
+  return `Error del servidor (${status}).`;
+}
+
 async function request<T>(
   path: string,
   options: RequestInit,
   explicitToken?: string,
 ): Promise<T> {
   const isFormData = options.body instanceof FormData;
-  const token = explicitToken ?? (await SecureStore.getItemAsync(TOKEN_KEY));
+  const token = explicitToken ?? (await getToken());
 
   const headers: Record<string, string> = {
     ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 
-  const res = await fetch(`${BASE_URL}${path}`, {
-    ...options,
-    headers: { ...headers, ...(options.headers as Record<string, string>) },
-  });
-
-  const json: ApiResponse<T> = await res.json();
-  if (!res.ok || !json.success) {
-    throw new ApiError(json.message ?? 'Error del servidor', res.status, json.data);
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, {
+      ...options,
+      headers: { ...headers, ...(options.headers as Record<string, string>) },
+    });
+  } catch {
+    // fetch solo rechaza si la red falló: el backend está caído o la IP del .env
+    // no es alcanzable desde el dispositivo.
+    throw new ApiError('No se pudo conectar con el servidor.', 0);
   }
-  return json.data;
+
+  // 204 y respuestas vacías no traen JSON que parsear.
+  const texto = await res.text();
+  let body: unknown = null;
+  if (texto) {
+    try {
+      body = JSON.parse(texto);
+    } catch {
+      if (!res.ok) throw new ApiError(`Error del servidor (${res.status}).`, res.status);
+    }
+  }
+
+  if (!res.ok) {
+    throw new ApiError(mensajeDeError(body, res.status), res.status, body);
+  }
+
+  return body as T;
 }
 
 export const http = {

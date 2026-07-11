@@ -1,20 +1,26 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as SecureStore from 'expo-secure-store';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-const TOKEN_KEY = 'user_token';
+import type { Rol, TokenResponse } from '@/app/auth/types/auth';
+import { deleteToken, getToken, saveToken } from '@/services/tokenStorage';
+
 const USER_KEY = '@roboadvisor_user';
 
 export interface AuthUser {
   id: string;
   name: string;
+  email: string | null;
+  /** Decide qué navegador ve el usuario. Viene firmado dentro del JWT: el
+   *  cliente lo lee, pero no lo elige — el backend revalida en cada request. */
+  role: Rol;
 }
 
 interface AuthContextValue {
   token: string | null;
   user: AuthUser | null;
+  role: Rol | null;
   isLoading: boolean;
-  setAuth: (token: string, user: AuthUser) => Promise<void>;
+  signIn: (respuesta: TokenResponse) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -30,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       try {
         const [storedToken, storedUser] = await Promise.all([
-          SecureStore.getItemAsync(TOKEN_KEY),
+          getToken(),
           AsyncStorage.getItem(USER_KEY),
         ]);
         if (storedToken && storedUser) {
@@ -43,22 +49,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
-  async function setAuth(newToken: string, newUser: AuthUser) {
-    setToken(newToken);
-    setUser(newUser);
-    await SecureStore.setItemAsync(TOKEN_KEY, newToken);
-    await AsyncStorage.setItem(USER_KEY, JSON.stringify(newUser));
+  /** Recibe tal cual la respuesta de /api/auth/login o /register. */
+  async function signIn(respuesta: TokenResponse) {
+    const nuevoUsuario: AuthUser = {
+      id: respuesta.user_id,
+      name: respuesta.full_name,
+      email: respuesta.email,
+      role: respuesta.role,
+    };
+    setToken(respuesta.access_token);
+    setUser(nuevoUsuario);
+    await saveToken(respuesta.access_token);
+    await AsyncStorage.setItem(USER_KEY, JSON.stringify(nuevoUsuario));
   }
 
   async function logout() {
     setToken(null);
     setUser(null);
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
+    await deleteToken();
     await AsyncStorage.removeItem(USER_KEY);
   }
 
   return (
-    <AuthContext.Provider value={{ token, user, isLoading, setAuth, logout }}>
+    <AuthContext.Provider
+      value={{ token, user, role: user?.role ?? null, isLoading, signIn, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

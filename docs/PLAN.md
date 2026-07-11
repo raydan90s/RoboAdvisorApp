@@ -116,98 +116,120 @@ de en adorno.
 
 ---
 
-## FASE 1 — Auth y roles en el backend (3 h)
+## FASE 1 — Auth y roles en el backend · ✅ HECHA (11-jul)
 
 Todo el ruteo de la app depende de esto, así que va primero.
 
-1. [ ] Agregar a `requirements.txt`:
+1. [x] Agregar a `requirements.txt`:
    ```
    bcrypt==4.2.1
    pyjwt==2.10.1
    python-multipart==0.0.20
    ```
-2. [ ] `src/services/auth_service.py` — `hash_password`, `verify_password` (bcrypt),
+2. [x] `src/services/auth_service.py` — `hash_password`, `verify_password` (bcrypt),
        `create_access_token` (JWT con `sub` = profile_id y **`role`**), `decode_token`.
-3. [ ] `src/routes/auth_routes.py`:
+3. [x] `src/routes/auth_routes.py`:
    - `POST /api/auth/register` → crea `profiles` con `role='investor'` (self-signup solo de inversionistas)
    - `POST /api/auth/login` → devuelve `{ access_token, role, full_name }`
-4. [ ] `src/dependencies/auth.py` — `get_current_user()` y `require_role('advisor')` como
+   - `GET  /api/auth/me` → el usuario del token (el front revalida la sesión guardada)
+4. [x] `src/dependencies/auth.py` — `get_current_user()` y `require_role(Rol.ADVISOR)` como
        dependencias de FastAPI. **`require_role` es lo que hace pasar `test_roles.py`.**
+5. [x] `JWT_SECRET` en `.env` / `.env.example` (y **hay que ponerlo en Render**, Fase 6).
 
-**Prueba de que funciona:** login con `asesor@demo.ec / demo1234` devuelve un JWT cuyo
-payload trae `"role": "advisor"`. Login con el inversionista trae `"role": "investor"`.
-
----
-
-## FASE 1B — El monto en el backend (1 h) · lo que el pivote rompió
-
-`investor_controller.py` hoy no sabe nada del monto. Sin esto, la propuesta muestra
-porcentajes flotando en el aire en vez de USD.
-
-1. [ ] `InvestorProfileCreate` (`src/models/investor.py`): agregar `monto: float = Field(..., gt=0)`.
-2. [ ] `create_investor_profile`: guardar `amount` en el `insert` de `profiling_sessions`.
-3. [ ] `get_portfolio_proposal`: al materializar la propuesta, escribir `proposals.total_amount`
-       y calcular `proposal_items.amount = round(monto * percentage / 100, 2)`.
-       **En SQL, no en Python** — es un número que entra al set permitido del guardarraíl y debe
-       venir de la base.
-4. [ ] `AssetAllocation`: agregar `monto_asignado`, `institucion`, `calificacion`,
-       `calificacion_fuente`, `calificacion_fecha`, `plazo_dias`. Salen de
-       `v_investor_proposal_summary`, que ya los expone.
-
-**Bandera determinista de regalo:** si `proposal_items.amount < instruments.min_amount`, es un
-punto de atención para el asesor ("el monto asignado a X queda bajo el mínimo de acceso"). Una
-comparación, cero IA.
+**Prueba de que funciona (corrida):** login con `asesor@demo.ec / demo1234` devuelve un JWT
+cuyo payload trae `"role": "advisor"`; el inversionista trae `"role": "investor"`. Contraseña
+mala → 401. `require_role(ADVISOR)`: asesor 200 · inversionista **403** · sin token 401.
 
 ---
 
-## FASE 2 — Endpoints del asesor (2 h) · cierra la HU3
+## FASE 1B — El monto en el backend · ✅ HECHA (11-jul)
 
-1. [ ] `GET /api/advisor/queue` → `select * from v_advisor_review_queue` (protegido con `require_role('advisor')`).
-       Debe devolver a Juan y Andrea de una.
-2. [ ] `POST /api/advisor/proposals/{id}/review` con body `{ decision, comments?, edited_allocation? }`:
+1. [x] `InvestorProfileCreate`: `monto: Decimal = Field(..., gt=0, max_digits=14, decimal_places=2)`.
+2. [x] `create_investor_profile` guarda `amount` en `profiling_sessions`.
+3. [x] `get_portfolio_proposal` copia el monto a `proposals.total_amount` (snapshot) y calcula
+       `proposal_items.amount` **en SQL**: `round(total_amount * percentage / 100, 2)`.
+4. [x] `AssetAllocation`: `monto_asignado`, `institucion`, `calificacion`, `calificacion_fuente`,
+       `calificacion_fecha`, `plazo_dias`.
+
+**Prueba (por la API real):** POST sin `monto` → 422; con monto negativo → 422; con USD 20.000 y
+las respuestas del reto → 12 pts → Moderado → **60% (USD 12.000) / 40% (USD 8.000)**. El caso del
+documento oficial, reproducido sin escribir un solo número a mano.
+
+**Bandera determinista:** si `proposal_items.amount < instruments.min_amount`, el asesor lo ve.
+Implementada en la Fase 2.
+
+---
+
+## FASE 2 — Endpoints del asesor · ✅ HECHA (11-jul, corrida contra Supabase)
+
+1. [x] `GET /api/advisor/queue` → `v_advisor_review_queue`. Devuelve a Juan y a Andrea de una.
+2. [x] `POST /api/advisor/proposals/{id}/review` con body `{ decision, comments?, edited_allocation? }`:
    - Escribe `advisor_reviews` (con `advisor_id`, `decided_at`, `rules_version_id`)
-   - Actualiza `proposals.status`
-   - Escribe `audit_log`
-   - Si `decision='edited'`: **validar en servidor que los % suman 100.** No confíes en el cliente.
-   - Si `decision='rejected'`: `comments` es obligatorio.
-3. [ ] `GET /api/audit` → `select * from v_audit_timeline`.
-4. [ ] `GET /api/investor/{id}/breakdown` → `select * from v_profiling_breakdown where session_id=...`
+   - Actualiza `proposals.status` · Escribe `audit_log`
+   - `edited`: los % deben sumar **exactamente 100**, sin instrumentos repetidos, y **cada
+     código se verifica contra `instruments`** — el catálogo es tan cerrado para el asesor
+     como para el LLM. Los USD los recalcula **Postgres**, no Python.
+   - `rejected`: `comments` obligatorio.
+3. [x] `GET /api/audit` → `v_audit_timeline` (también `require_role(ADVISOR)`).
+4. [x] `GET /api/investor/{id}/breakdown` → `v_profiling_breakdown`. Acepta `?session_id=` para
+       que el asesor abra la sesión que originó *esa* propuesta y no la más reciente.
 
-Las tres vistas ya existen en `seed.sql`, así que esto es casi solo plomería.
+Extras que no estaban en la lista y sin los cuales el front no podía construirse:
+
+- [x] `GET /api/advisor/proposals/{id}` — el detalle que pinta `DetallePropuestaPage`: líneas con
+      emisor, calificación **con fuente y fecha**, plazo, mínimo de acceso, e historial de revisiones.
+- [x] **Banderas deterministas** (HU3, "resumen al asesor"): *monto asignado bajo el mínimo de
+      acceso*, *puntaje en el borde del umbral*, *sesión sin monto*. Son comparaciones, cero IA.
+- [x] Una propuesta se decide **una sola vez**: `select … for update` + estado ≠ `pending_review`
+      → **409**. Una decisión no se sobrescribe.
+
+**Prueba de que funciona (corrida contra la base):** asesor → cola con Juan y Andrea; inversionista
+→ **403**; sin token → **401**. Rechazar sin comentario, editar sumando 90, citar un producto fuera
+de catálogo, repetir un instrumento y mandar `edited_allocation` en un `approve` → los cinco **422**.
+Edición válida 70/30 sobre USD 10.000 → Postgres reescribe **USD 7.000 / 3.000**, `status='edited'`,
+sale de la cola, y la segunda decisión → **409**. Breakdown de Juan: 12 pts → Moderado (umbral 9–12,
+reglas v1). Un inversionista pidiendo el breakdown de otro → **403**.
 
 **Criterio HU3 cubierto:** fecha (`decided_at`), versión de reglas (`rules_version_id`) y
 responsable (`advisor_id`) quedan registrados en cada decisión.
 
+> ⚠️ La prueba dejó en la base un inversionista de mentira, **`ZZ Test Fase2`**
+> (`26d8317f-5522-4195-869a-c4058b44e5ca`), con su propuesta en `edited`. **No sale en la cola**
+> (solo lista `pending_review`), pero **sí aparece en la AuditoriaPage**. Bórralo antes de grabar:
+> ```bash
+> psql "$U" -1 -c "delete from audit_log where actor_id='26d8317f-5522-4195-869a-c4058b44e5ca'
+>                     or entity_id='d0b29a9a-c9d5-4960-adc9-a66e7fc4b207';
+>                  delete from profiles where id='26d8317f-5522-4195-869a-c4058b44e5ca';"
+> ```
+
 ---
 
-## FASE 3 — Gemini de verdad + guardarraíles (4 h) · el criterio #3
+## FASE 3 — Gemini de verdad + guardarraíles · ✅ HECHA (11-jul)
 
-Aquí es donde se ganan los puntos de *Mitigación de Riesgos / Antialucinación* y donde
-califica el premio del patrocinador (Gemini).
+1. [x] **`src/services/guardrails.py`, escrito ANTES que el LLM.** `validar_numeros` ·
+       `validar_lexico` · `validar_catalogo` (productos, **emisores y calificaciones**).
+       Devuelve un `Veredicto` con motivos: el rechazo es auditable, no un booleano mudo.
+2. [x] `ai_agent.py` llama a Gemini de verdad (`ChatGoogleGenerativeAI`, temperature 0.2).
+       Los % y los USD van **en el prompt**; el modelo solo redacta.
+3. [x] generar → validar → **reintentar una vez, diciéndole al modelo qué hizo mal** → si
+       vuelve a fallar, **explicación determinista**. Nunca se muestra un número inventado.
+4. [x] Cada turno queda en `llm_interactions` con `guardrail_passed`, `retry_count`, `model`
+       y los **source chips** en `metadata`.
 
-1. [ ] **`src/services/guardrails.py` — escribir esto ANTES que el LLM.** Es lo que se testea.
-   - `validar_numeros(texto, valores_permitidos: set[float]) -> bool`
-     Extrae con regex todos los números del texto y verifica que cada uno esté en el conjunto
-     permitido: los `%` de la propuesta, **los USD de cada línea y el total**, el puntaje, los
-     umbrales, los `expected_return` y los `term_days` de los productos citados. Un número
-     fuera del conjunto → rechazo.
-   - `validar_lexico(texto) -> bool` — regex sobre `garantiz`, `asegur`, `sin riesgo`,
-     `vas a ganar`, `rentabilidad garantizada`.
-   - `validar_catalogo(texto, codigos_validos) -> bool` — **dos catálogos cerrados ahora**:
-     ningún producto fuera de `instruments` y **ningún banco ni calificación fuera de
-     `institutions`**. Que la IA se invente un "Banco XYZ con calificación AAA" es tan grave
-     como que se invente un porcentaje, y ahora es igual de imposible.
-2. [ ] Reemplazar el mock de `ai_agent.py` con `ChatGoogleGenerativeAI`. **Los porcentajes van
-       en el prompt, no los decide el modelo.** El esqueleto ya está escrito en el docstring
-       de la función.
-3. [ ] Envolver la llamada: generar → validar → si falla, **reintentar una vez** → si vuelve a
-       fallar, **usar la explicación determinista de plantilla** (la que hoy ya devuelve el mock).
-       Nunca se le muestra al usuario un número que la IA inventó.
-4. [ ] Persistir cada turno en `llm_interactions` con `guardrail_passed`, `retry_count`, `model`
-       y las `sources` en `metadata`. Las columnas ya existen (las agregó `seed.sql`).
+> ⚠️ **El modelo importa: `gemini-2.0-flash` NO funciona con esta clave.** Devuelve
+> `429 … limit: 0`, que no es "te pasaste de cuota" sino "este modelo no está habilitado para
+> el proyecto". El `.env` ahora apunta a **`gemini-flash-latest`**, que sí responde. Si cambias
+> de clave, verifica el modelo antes de grabar:
+> ```bash
+> curl -s "https://generativelanguage.googleapis.com/v1beta/models/$MODELO:generateContent?key=$K" \
+>   -H 'Content-Type: application/json' -d '{"contents":[{"parts":[{"text":"Di OK"}]}]}'
+> ```
 
-> **La caída elegante es la clave:** si Gemini se cae o alucina durante el video, la app
-> **sigue funcionando** con la explicación determinista. No hay demo rota por culpa del LLM.
+**Prueba (con la API real de Gemini):** el texto generado para el caso de Juan cita 12/15, USD
+20.000, 60% / USD 12.000 y 40% / USD 8.000, con los dos bancos y sus AAA — y **pasa el
+guardarraíl al primer intento**. La caída elegante también se probó *en condiciones reales*: con
+el modelo mal configurado Gemini devolvió 429 y el usuario igual recibió la explicación correcta,
+escrita por la plantilla. La demo no se rompe por culpa del LLM.
 
 ---
 
@@ -215,22 +237,45 @@ califica el premio del patrocinador (Gemini).
 
 Orden estricto por dependencia. No empieces la siguiente sin cerrar la anterior.
 
-1. [ ] `npm i @react-navigation/bottom-tabs` (no está instalado y los tabs lo necesitan).
-2. [ ] **Alinear el sobre de la API.** `src/services/http.ts` espera `{ success, data, message }`
-       y FastAPI devuelve el objeto plano. **Decide ahora**: lo más rápido es simplificar `http.ts`.
-       Es la decisión pendiente #1 del doc de arquitectura y bloquea la primera pantalla conectada.
-3. [ ] `AuthContext` — agregar **`role`**. De eso depende todo el ruteo.
-4. [ ] `RootNavigator`: sin sesión → `AuthStack`; `role==='investor'` → `InvestorTabs`;
-       `role==='advisor'` → `AdvisorTabs`.
-5. [ ] Pantallas del inversionista, en este orden:
-   - `LoginPage` → `HomePage`
-   - `CuestionarioPage` — **input de monto en USD** + las **5 preguntas** con chips
-     (servidas por `GET /api/investor/questions`, no hardcodeadas)
-   - `PropuestaPage` — donut (`react-native-svg` ya está) + tarjeta por producto con
-     **nombre del banco y su calificación** (`Banco Pichincha · AAA`), el **`%` y los USD**,
-     el plazo, **banner de disclaimer no descartable** y badge de estado
-   - `ComoSeCalculoPage` — tabla respuesta → puntos → umbral, con **"reglas v1" a la vista**
-     y el bloque de la regla de elegibilidad (*"tu perfil admite instituciones hasta AA"*)
+1. [x] `npm i @react-navigation/bottom-tabs` (instalado, `^7.18.8`). **Solo lo usa el asesor.**
+       El inversionista se quedó como stack: su flujo es lineal (perfilarse → propuesta →
+       cómo se calculó) y una pestaña "Propuesta" para alguien sin perfilar solo podría
+       mostrar un 404.
+2. [x] **Alinear el sobre de la API.** ✅ Resuelto: `http.ts` lee el objeto plano de FastAPI y
+       traduce `{ detail }` (string o lista de errores 422) a `ApiError`. Se eliminó
+       `{ success, data, message }`. *Decisión pendiente #1 del doc de arquitectura: cerrada.*
+       Bonus: `tokenStorage.ts` cae a AsyncStorage en web, porque `expo-secure-store` **no existe
+       en web** y el despliegue del reto es web.
+3. [x] `AuthContext` — **`role`** agregado; `signIn(TokenResponse)` guarda token + usuario.
+4. [x] `RootNavigator`: sin sesión → `AuthStack`; `investor` → `InvestorStack`; `advisor` →
+       `AdvisorStack`. Hoy son native-stacks con una pantalla; se convierten en Tabs en el paso 1.
+5. [x] **Pantallas del inversionista · HECHAS (11-jul).**
+   - [x] `LoginPage` → `InicioPage`. `InicioPage` bifurca según el **404** de
+         `GET /api/investor/{id}`: ese 404 no es un error, es "todavía no te perfilaste"
+         — el estado con el que arranca `inversionista@demo.ec` para grabar el video.
+   - [x] `CuestionarioPage` — monto en USD + las 5 preguntas con chips, servidas por
+         `GET /api/investor/questions`. Cero preguntas hardcodeadas y cero puntajes en el
+         front: solo se mandan los códigos y `scoring_rules` puntúa.
+   - [x] `PropuestaPage` — donut (`react-native-svg`) + tarjeta por producto con banco y
+         calificación, el % **y** los USD, plazo, `DisclaimerBanner` no descartable y
+         `EstadoBadge`.
+   - [x] `ComoSeCalculoPage` — tabla respuesta → puntos → total, el umbral que decidió el
+         perfil, badge **"reglas v1"** y el bloque de elegibilidad por calificación.
+
+   Tres decisiones que sostienen el criterio #3 y conviene no deshacer:
+
+   - **El pie de la calificación vive dentro del componente `Calificacion`**, no suelto en
+     cada pantalla. Así es imposible pintar un rating sin su calificadora y su fecha: no
+     hay forma de mostrar uno sin el otro aunque alguien lo intente.
+   - **`utils/formato.ts` no hace aritmética de negocio.** Agrupa miles y pone comas; los
+     USD de cada línea llegan ya calculados por Postgres. El front nunca multiplica un
+     porcentaje por un monto.
+   - **El donut no normaliza los porcentajes.** Si no suman 100, se ve el hueco. Un donut
+     que se autocompleta escondería un error de datos.
+
+   **Verificado:** `tsc --noEmit` limpio · `expo export --platform web` bundlea (1,42 MB) ·
+   los cuatro endpoints contestan con exactamente las formas que declaran los tipos
+   (Juan: 12/15 → moderado → 60% USD 12.000 / 40% USD 8.000, ambos AAA con fuente y fecha).
 6. [ ] Pantallas del asesor:
    - `ColaRevisionPage` → `DetallePropuestaPage` → botones Aprobar / Editar / Rechazar
    - `AuditoriaPage` — timeline de `v_audit_timeline`
@@ -245,7 +290,23 @@ diferencia entre un dato citado y un dato inventado.
 
 ---
 
-## FASE 5 — Tests (2 h) · apuntamos a NIVEL BÁSICO, con `test_guardrails` de regalo
+## FASE 5 — Tests · ✅ HECHA (11-jul) — **46 pasan**
+
+```bash
+cd ROBOADVISORY-BACKEND && .venv/Scripts/python -m pytest -q   # 46 passed
+```
+
+Los seis archivos existen y corren. Los de scoring/elegibilidad van **contra la base real**
+(el motor determinista *es* la base; probarlo contra un mock no probaría nada). Dos hallazgos
+que los tests destaparon y que no eran errores de los tests:
+
+- El guardarraíl leía **`AA+` como `AA`** (el `\b` no existe después de un `+`): una calificación
+  inventada se reportaba como otra distinta. Corregido con un lookahead.
+- No detectaba emisores con conector en minúscula (**"Banco del Pacífico Andino"** pasaba colado).
+  Corregido.
+- El PLAN afirmaba que el DPF de Loja tenía "la mejor tasa del catálogo": **es falso**, el Fondo de
+  Crecimiento rinde 11,5% y es AAA. Loja tiene la mejor tasa **entre los depósitos a plazo**, que
+  es donde el trade-off tasa/calificación es real. El test dice ahora la verdad.
 
 ```
 tests/
@@ -277,6 +338,33 @@ Los tres marcados con ⭐ son los que hay que enseñar en el documento explicati
 
 Si el tiempo se agota, el **mínimo obligatorio** es documentar en el README los casos
 probados a mano (input → esperado → obtenido). Eso ya puntúa.
+
+---
+
+## FASE 5B — Auth de los endpoints del inversionista · ✅ HECHA (11-jul)
+
+Se cerró el agujero (`/portfolio` y `/investor/{id}` eran públicos) y, al hacerlo, apareció
+**un bug de identidad mucho peor**:
+
+> `register` creaba una fila en `profiles`… y `create_investor_profile` **creaba otra**. El
+> `investor_id` del cuestionario nunca era el del usuario logueado. El cliente quedaba con dos
+> identidades y su propia propuesta le habría dado **403** apenas se cerrara la auth. En el
+> front (Fase 4) esto se habría manifestado como "el cuestionario funciona pero la propuesta
+> dice que no es tuya", con horas de depuración en el peor momento.
+
+1. [x] `POST /api/investor/profile` es **autenticado** (`require_role(INVESTOR)`) y le adjunta el
+       perfilamiento **al usuario del token**. `nombre` y `email` salieron del body: los pone el
+       token, porque nadie perfila a nombre de otro. (⚠️ **contrato roto para el front**.)
+2. [x] `GET /portfolio`, `/breakdown` y `/{id}` usan `exige_dueno_o_asesor`: el cliente ve lo
+       suyo; el asesor, lo de cualquiera (revisar carteras ajenas es su trabajo).
+3. [x] La suite ya **no ensucia la base**: las cuentas que crea, las borra (`cuenta_desechable`).
+
+**Prueba (flujo real del video):** login `inversionista@demo.ec` → cuestionario → el
+`investor_id` **coincide con el del login** → su cartera da 200 con USD 12.000 / 8.000; la
+cartera de Juan con ese mismo token da **403**; sin token, **401**. **55 tests pasan.**
+
+La base quedó limpia: solo los 5 usuarios del seed, con `Inversionista Demo` sin perfilar para
+grabar el flujo en vivo.
 
 ---
 
