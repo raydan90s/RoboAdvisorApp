@@ -11,12 +11,13 @@ import Calificacion from '@/components/shared/Calificacion';
 import DisclaimerBanner from '@/components/shared/DisclaimerBanner';
 import EstadoBadge from '@/components/shared/EstadoBadge';
 import { Cargando, ErrorEstado } from '@/components/shared/Estados';
+import { COLORES } from '@/constants/colores';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/services/http';
 import type { InvestorStackParamList } from '@/types/navigation';
 import { plazo, porcentaje, puntos, usd } from '@/utils/formato';
 
-import DonutPortafolio, { COLORES } from './DonutPortafolio';
+import DonutPortafolio, { COLORES as COLORES_DONUT } from './DonutPortafolio';
 import { getPropuesta } from '../services/investorApi';
 import type { AssetAllocation, PortfolioProposal } from '../types/inversionista';
 
@@ -61,6 +62,34 @@ function TarjetaProducto({ linea, color }: { linea: AssetAllocation; color: stri
         </Text>
       ) : null}
     </View>
+  );
+}
+
+/** Las salidas al pie de la propuesta: mismo alto, mismo chevron, misma jerarquía. */
+function FilaAccion({
+  icono,
+  titulo,
+  detalle,
+  onPress,
+}: {
+  icono: keyof typeof Ionicons.glyphMap;
+  titulo: string;
+  detalle: string;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.85}
+      className="flex-row items-center gap-3 rounded-2xl border border-brand-primary bg-surface-background px-5 py-4"
+    >
+      <Ionicons name={icono} size={20} color={COLORES.primario} />
+      <View className="flex-1">
+        <Text className="text-body-md font-bold text-brand-primary">{titulo}</Text>
+        <Text className="text-caption text-text-secondary">{detalle}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={20} color={COLORES.primario} />
+    </TouchableOpacity>
   );
 }
 
@@ -191,28 +220,39 @@ export default function VistaPropuesta({ sessionId, titulo = 'Tu propuesta' }: P
           <TarjetaProducto
             key={linea.instrumento_code}
             linea={linea}
-            color={COLORES[i % COLORES.length]}
+            color={COLORES_DONUT[i % COLORES_DONUT.length]}
           />
         ))}
 
-        {/* HU1-3: el usuario tiene que poder ver cómo se llegó a su perfil. */}
-        <TouchableOpacity
-          onPress={() =>
-            navigation.navigate('ComoSeCalculo', { sessionId: propuesta.session_id })
-          }
-          activeOpacity={0.85}
-          className="mt-2 flex-row items-center justify-between rounded-2xl border border-brand-primary bg-surface-background px-5 py-4"
-        >
-          <View className="flex-1 pr-3">
-            <Text className="text-body-md font-bold text-brand-primary">
-              ¿Cómo se calculó mi perfil?
-            </Text>
-            <Text className="text-caption text-text-secondary">
-              Respuesta por respuesta, con las reglas a la vista.
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color="#1E3A8A" />
-        </TouchableOpacity>
+        <View className="mt-2 gap-3">
+          {/* HU1-3: el usuario tiene que poder ver cómo se llegó a su perfil. */}
+          <FilaAccion
+            icono="help-circle-outline"
+            titulo="¿Cómo se calculó mi perfil?"
+            detalle="Respuesta por respuesta, con las reglas a la vista."
+            onPress={() =>
+              navigation.navigate('ComoSeCalculo', { sessionId: propuesta.session_id })
+            }
+          />
+
+          {/* El monto sale de la propuesta, no de la ruta: es el único lugar donde ya
+              está cargado. Con él, las tasas llegan con el interés ya calculado —y si la
+              propuesta no tiene monto, el comparador abre igual, solo que sin cifras. */}
+          <FilaAccion
+            icono="swap-horizontal-outline"
+            titulo="Comparar con el catálogo"
+            detalle={
+              propuesta.monto_total != null
+                ? `Qué tasa daría ${usd(propuesta.monto_total)} en cada producto.`
+                : 'Las tasas aprobadas, y cuáles admite tu perfil.'
+            }
+            onPress={() =>
+              navigation.navigate('Comparador', {
+                monto: propuesta.monto_total ?? undefined,
+              })
+            }
+          />
+        </View>
 
         <View className="h-4" />
       </ScrollView>

@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import DisclaimerBanner from '@/components/shared/DisclaimerBanner';
 import { Cargando, ErrorEstado } from '@/components/shared/Estados';
+import { COLORES } from '@/constants/colores';
 import { useAuth } from '@/context/AuthContext';
 import HomeHeader from '@/screens/inicio/home/components/HomeHeader';
 import { ApiError } from '@/services/http';
@@ -128,6 +129,35 @@ function EditorCapital({
 }
 
 /**
+ * Comparador y simulador se exploran **sin** haber abierto una cartera, así que su
+ * entrada vive en el Home y no colgada de una subcuenta. Desde aquí van sin monto: el
+ * monto solo existe dentro de una propuesta, y ahí es donde el comparador lo recibe.
+ */
+function AccesoHerramienta({
+  icono,
+  titulo,
+  detalle,
+  onPress,
+}: {
+  icono: keyof typeof Ionicons.glyphMap;
+  titulo: string;
+  detalle: string;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.85}
+      className="flex-1 gap-1 rounded-2xl border border-surface-border bg-surface-background p-4"
+    >
+      <Ionicons name={icono} size={20} color={COLORES.primario} />
+      <Text className="text-body font-bold text-text-primary">{titulo}</Text>
+      <Text className="text-caption leading-4 text-text-muted">{detalle}</Text>
+    </TouchableOpacity>
+  );
+}
+
+/**
  * El Home del inversionista: su capital y en qué está repartido.
  *
  * Una subcuenta es una sesión de perfilamiento con nombre, así que esta lista es la
@@ -198,6 +228,21 @@ export default function MisSubcuentasPage({ navigation }: Props) {
               <EditorCapital
                 capitalActual={resumen.capital_total}
                 onGuardado={setResumen}
+              />
+            </View>
+
+            <View className="flex-row gap-3">
+              <AccesoHerramienta
+                icono="swap-horizontal-outline"
+                titulo="Comparador"
+                detalle="Las tasas del catálogo, y cuáles admite tu perfil."
+                onPress={() => navigation.navigate('Comparador')}
+              />
+              <AccesoHerramienta
+                icono="calculator-outline"
+                titulo="Simulador"
+                detalle="Cuánto rendiría un monto a un plazo."
+                onPress={() => navigation.navigate('Simulador')}
               />
             </View>
 
