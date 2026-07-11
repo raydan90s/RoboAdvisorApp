@@ -3,9 +3,10 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import BotonAtras from '@/components/shared/BotonAtras';
 import { Cargando, ErrorEstado } from '@/components/shared/Estados';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/services/http';
@@ -82,9 +83,7 @@ export default function ComoSeCalculoPage() {
       <StatusBar style="dark" />
 
       <View className="flex-row items-center gap-3 border-b border-surface-border px-5 py-4">
-        <TouchableOpacity onPress={navigation.goBack} activeOpacity={0.7}>
-          <Text className="text-body font-bold text-brand-primary">Atrás</Text>
-        </TouchableOpacity>
+        <BotonAtras onPress={navigation.goBack} />
         <Text className="text-heading font-bold text-text-primary">Cómo se calculó</Text>
       </View>
 

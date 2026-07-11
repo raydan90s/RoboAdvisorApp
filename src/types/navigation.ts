@@ -21,10 +21,24 @@ export type AuthStackParamList = {
 export type ComoSeCalculoParams = { investorId?: string; sessionId?: string } | undefined;
 
 export type InvestorStackParamList = {
+  /** El Home: el capital del cliente y en qué subcuentas lo repartió. */
+  MisSubcuentas: undefined;
+  NuevaSubcuenta: undefined;
+  /**
+   * Una subcuenta concreta. El `sessionId` no es un permiso: el backend igual verifica
+   * que la sesión sea del usuario del token. `nombre` es solo el título de la pantalla,
+   * para no esperar al fetch para pintarlo.
+   */
+  SubcuentaDetalle: { sessionId: string; nombre?: string };
+
+  /** Flujo de una sola cartera. Sigue vivo: es a lo que se revierte si las subcuentas
+   *  no llegan (el botón de pánico del reparto). Volver a él = cambiar el
+   *  `initialRouteName` del stack a `Inicio`. */
   Inicio: undefined;
   Cuestionario: undefined;
   /** Lee la propuesta del usuario del token: no recibe un id que se pueda falsear. */
   Propuesta: undefined;
+
   ComoSeCalculo: ComoSeCalculoParams;
   /** Con `monto` (p. ej. desde una propuesta) las tasas llegan con interés calculado. */
   Comparador: { monto?: number } | undefined;

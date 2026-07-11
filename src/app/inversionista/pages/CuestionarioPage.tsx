@@ -13,21 +13,17 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import BotonAtras from '@/components/shared/BotonAtras';
 import { Cargando, ErrorEstado } from '@/components/shared/Estados';
 import { ApiError } from '@/services/http';
 import type { InvestorStackParamList } from '@/types/navigation';
+import { montoANumero } from '@/utils/formato';
 
+import FormularioPreguntas from '../components/FormularioPreguntas';
 import { crearPerfil, getPreguntas } from '../services/investorApi';
 import type { Pregunta } from '../types/inversionista';
 
 type Props = NativeStackScreenProps<InvestorStackParamList, 'Cuestionario'>;
-
-/** El usuario escribe "20.000" o "20000"; el backend espera un número. */
-function montoANumero(texto: string): number {
-  const limpio = texto.replace(/[^\d,.]/g, '').replace(/\./g, '').replace(',', '.');
-  const valor = Number(limpio);
-  return Number.isFinite(valor) ? valor : 0;
-}
 
 /**
  * HU1: el cuestionario de perfilamiento.
@@ -106,9 +102,7 @@ export default function CuestionarioPage({ navigation }: Props) {
       <StatusBar style="dark" />
 
       <View className="flex-row items-center gap-3 border-b border-surface-border px-5 py-4">
-        <TouchableOpacity onPress={navigation.goBack} activeOpacity={0.7}>
-          <Text className="text-body font-bold text-brand-primary">Atrás</Text>
-        </TouchableOpacity>
+        <BotonAtras onPress={navigation.goBack} />
         <Text className="text-heading font-bold text-text-primary">Tu perfil</Text>
       </View>
 
@@ -148,52 +142,13 @@ export default function CuestionarioPage({ navigation }: Props) {
             ) : null}
           </View>
 
-          {preguntas.map((pregunta, i) => (
-            <View
-              key={pregunta.code}
-              className="gap-3 rounded-2xl border border-surface-border bg-surface-background p-5"
-            >
-              <Text className="text-caption font-bold uppercase text-text-muted">
-                Pregunta {i + 1} de {preguntas.length}
-              </Text>
-              <Text className="text-body-md font-bold text-text-primary">
-                {pregunta.text}
-              </Text>
-
-              <View className="flex-row flex-wrap gap-2">
-                {pregunta.opciones.map((opcion) => {
-                  const elegida = respuestas[pregunta.code] === opcion.code;
-                  return (
-                    <TouchableOpacity
-                      key={opcion.code}
-                      onPress={() =>
-                        setRespuestas((prev) => ({
-                          ...prev,
-                          [pregunta.code]: opcion.code,
-                        }))
-                      }
-                      activeOpacity={0.85}
-                      className={`rounded-full border px-4 py-2 ${
-                        elegida
-                          ? 'border-brand-primary bg-brand-primary'
-                          : 'border-surface-border bg-surface-elevated'
-                      }`}
-                    >
-                      <Text
-                        className={`text-body ${
-                          elegida
-                            ? 'font-bold text-text-onPrimary'
-                            : 'text-text-secondary'
-                        }`}
-                      >
-                        {opcion.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-          ))}
+          <FormularioPreguntas
+            preguntas={preguntas}
+            respuestas={respuestas}
+            onElegir={(preguntaCode, opcionCode) =>
+              setRespuestas((prev) => ({ ...prev, [preguntaCode]: opcionCode }))
+            }
+          />
 
           {errorEnvio ? (
             <View className="rounded-2xl bg-stateAlpha-errorSoft px-4 py-3">

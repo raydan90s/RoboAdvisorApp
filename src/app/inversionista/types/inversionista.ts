@@ -31,6 +31,8 @@ export interface InvestorProfileCreate {
   cedula_ruc?: string;
   /** { question_code: option_code } */
   respuestas: Record<string, string>;
+  /** Bautiza la subcuenta. Sin él, el flujo de una sola cartera sigue funcionando. */
+  nombre_subcuenta?: string;
 }
 
 export interface RespuestaDetalle {
@@ -48,10 +50,49 @@ export interface Investor {
   email: string | null;
   cedula_ruc: string | null;
   puntaje: number;
+  /** El denominador del "12 / 15". Lo sirve la BD: si cambian los puntos de una opción,
+   *  un 15 escrito acá pasaría a mentir. */
+  puntaje_max: number | null;
   perfil_riesgo: PerfilRiesgo;
   respuestas: RespuestaDetalle[];
   monto: number | null;
   created_at: string | null;
+}
+
+// --- Subcuentas (GET /api/investor/{id}/subaccounts) ----------------------
+
+/**
+ * Una subcuenta es una sesión de perfilamiento con nombre: mismo dueño, su propio
+ * monto, su propio perfil y su propia propuesta.
+ */
+export interface Subcuenta {
+  session_id: string;
+  proposal_id: string | null;
+  nombre: string;
+  monto: number;
+  perfil: PerfilRiesgo;
+  puntaje: number;
+  puntaje_max: number | null;
+  /** Null hasta que el cliente abre su propuesta: ahí es donde se materializa. */
+  estado: EstadoPropuesta | null;
+  /** El instrumento de mayor % — lo elige Postgres, no el front. */
+  instrumento_principal: string | null;
+  retorno_esperado_anual: number | null;
+}
+
+/**
+ * `sin_asignar` viene del servidor y no se recalcula acá: es el número contra el que
+ * el backend valida el monto de una subcuenta nueva, y dos versiones del mismo número
+ * son una discrepancia esperando ocurrir.
+ *
+ * `capital_total` en null = el cliente nunca declaró su capital. No es lo mismo que
+ * cero, y la pantalla lo dibuja distinto.
+ */
+export interface ResumenCapital {
+  capital_total: number | null;
+  asignado: number;
+  sin_asignar: number | null;
+  subcuentas: Subcuenta[];
 }
 
 // --- Propuesta (GET /api/investor/{id}/portfolio) -------------------------
@@ -80,6 +121,7 @@ export interface PortfolioProposal {
   session_id: string;
   perfil_riesgo: PerfilRiesgo;
   puntaje: number;
+  puntaje_max: number | null;
   riesgo_esperado: NivelRiesgo;
   estado: EstadoPropuesta;
   monto_total: number | null;

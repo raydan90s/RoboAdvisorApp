@@ -6,6 +6,7 @@ import type {
   PortfolioProposal,
   Pregunta,
   ProfilingBreakdown,
+  ResumenCapital,
 } from '../types/inversionista';
 
 /** El cuestionario lo sirve la BD: cambiar una opción no exige tocar el front. */
@@ -18,9 +19,30 @@ export function crearPerfil(payload: InvestorProfileCreate): Promise<Investor> {
   return http.post<Investor>('/api/investor/profile', payload);
 }
 
-/** La primera llamada genera la propuesta (y con ella el texto de Gemini). */
-export function getPropuesta(investorId: string): Promise<PortfolioProposal> {
-  return http.get<PortfolioProposal>(`/api/investor/${investorId}/portfolio`);
+/**
+ * La primera llamada genera la propuesta (y con ella el texto de Gemini).
+ *
+ * Sin `sessionId` devuelve la sesión más reciente — así la pantalla de una sola cartera
+ * sigue funcionando sin cambios mientras existen las subcuentas.
+ */
+export function getPropuesta(
+  investorId: string,
+  sessionId?: string,
+): Promise<PortfolioProposal> {
+  const query = sessionId ? `?session_id=${encodeURIComponent(sessionId)}` : '';
+  return http.get<PortfolioProposal>(`/api/investor/${investorId}/portfolio${query}`);
+}
+
+/** Las subcuentas del cliente y el reparto de su capital. Las tres cifras las suma SQL. */
+export function getSubcuentas(investorId: string): Promise<ResumenCapital> {
+  return http.get<ResumenCapital>(`/api/investor/${investorId}/subaccounts`);
+}
+
+/** Fija el techo de capital. Devuelve el reparto ya recalculado por el servidor. */
+export function fijarCapital(capitalTotal: number): Promise<ResumenCapital> {
+  return http.post<ResumenCapital>('/api/investor/capital', {
+    capital_total: capitalTotal,
+  });
 }
 
 export function getBreakdown(
