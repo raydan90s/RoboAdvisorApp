@@ -26,3 +26,23 @@ export function getCotizaciones(symbols?: string[]): Promise<MarketQuote[]> {
     .get<MarketQuotesResponse>(`/api/market/quotes${query}`)
     .then((r) => r.quotes);
 }
+
+export interface HistoricalPoint {
+  /** "YYYY-MM-DD" */
+  date: string;
+  close: number;
+}
+
+export interface HistoricalSeries {
+  symbol: string;
+  /** "alpha_vantage" (en vivo) o "mock" (respaldo simulado si se agotó la cuota). */
+  source: 'alpha_vantage' | 'mock';
+  points: HistoricalPoint[];
+}
+
+/** La serie diaria de un símbolo, para el gráfico del simulador de mercados. */
+export function getHistorico(symbol: string, days = 30): Promise<HistoricalSeries> {
+  return http.get<HistoricalSeries>(
+    `/api/market/history?symbol=${encodeURIComponent(symbol)}&days=${days}`,
+  );
+}
