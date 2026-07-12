@@ -234,3 +234,59 @@ El front llama a `POST /api/agent/simulador` y
 actual — quedaron en trabajo de otra rama sin mergear. El Comparador/Simulador del
 front fallará hasta que se implementen; queda fuera del alcance de esta parte
 (Alpha Vantage no los toca ni los necesita).
+
+## 7. Simulador de mercados globales: gráfico histórico + recomendación IA forzada
+
+Segunda vuelta sobre la Parte 3-5: agrega series de tiempo (gráfico) y una vía
+explícita para forzar la Ruta C del agente, sin tocar el catálogo bancario ni los
+58 tests.
+
+### Backend: `GET /api/market/history` (`ROBOADVISORY-BACKEND/src/services/market_data.py`)
+
+Mismo wrapper que `/quotes`, con su propia función `obtener_historico()`: cubre las
+3 funciones de series de Alpha Vantage (`DIGITAL_CURRENCY_DAILY` para cripto,
+`FX_DAILY` para forex/metales, `TIME_SERIES_DAILY` para acciones), cacheadas 1h
+igual que las cotizaciones en vivo. Si la cuota se agota o el símbolo no tiene
+serie conocida (`JPN225` en el free tier), cae a una **caminata aleatoria
+determinista** — sembrada con el símbolo, no con el reloj, así que la curva no
+cambia de forma entre una recarga y otra durante la demo. Probado en vivo: `SPY`
+trajo 10 días reales de Alpha Vantage; `JPN225` cayó al mock por cuota agotada.
+
+### Backend: forzar la Ruta C (`AgentChatRequest.symbols`)
+
+El router de `agent_graph.py` clasificaba cada mensaje por su texto (regex). Eso
+funciona para el chat libre, pero un botón de "recomiéndame esto" no debería
+depender de que el mensaje generado contenga las palabras correctas. `symbols` es
+la señal explícita: si viene, el router se salta la clasificación y va directo a
+Ruta C con esos símbolos — igual pasa por el guardarraíl que cualquier otra ruta.
+Probado con un mensaje genérico ("Dame un resumen") + `symbols=[SPY,EURUSD]`: fue
+a Ruta C igual y citó exactamente esos dos símbolos con datos reales.
+
+### Frontend: `MercadosSimuladorPage.tsx`
+
+Pantalla nueva, separada del simulador bancario (`SimuladorPage` sigue simulando
+productos reales del catálogo con tasas de Postgres — no se tocó). Selector de 4
+activos (Bitcoin, S&P 500, EUR/USD, Oro), gráfico de líneas de 30 días
+(`components/shared/LineChart.tsx`, SVG a mano igual que `DonutPortafolio` — el
+proyecto no trae una librería de charts, y agregar una solo para esta pantalla
+sería una dependencia nueva por ~100 líneas de SVG), y el disclaimer permanente
+pedido: *"Simulación educativa. Estos activos globales no forman parte del
+catálogo institucional ni son ejecutables."* — sin botón de cerrar, mismo criterio
+que `DisclaimerBanner`.
+
+El botón **"Recomendación de Mercados (IA)"** llama a `enviarMensaje(...,
+symbols: [activo])`: fuerza la Ruta C del backend para el activo que está en
+pantalla. La respuesta se pinta con el mismo lenguaje visual ámbar que las
+burbujas del chat (banner "SIMULACIÓN EDUCATIVA · FUERA DEL BANCO" + `SourceChips`
+con la fuente Alpha Vantage) — reutilizado, no reinventado.
+
+Entrada: tarjeta "Mercados globales" en el home de subcuentas
+(`MisSubcuentasPage`), en su propia fila, separada de Comparador/Simulador.
+
+Verificado de punta a punta con Playwright contra el backend real: cambio de
+activo (Bitcoin → Oro), gráfico con 30 días de datos reales de Alpha Vantage para
+BTCUSD, fallback a mock correctamente etiquetado cuando la cuota de XAUUSD se
+agotó ("Cotización de referencia simulada..."), y la recomendación de IA citando
+el precio exacto (`USD 2,385.10`) con su chip `XAUUSD · USD 2,385.10 · Alpha
+Vantage (simulado)` — la etiqueta de fuente distingue correctamente vivo de
+simulado hasta en el chip.
