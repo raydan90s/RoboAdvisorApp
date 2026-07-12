@@ -7,6 +7,10 @@ import AuditoriaPage from '@/app/asesor/pages/AuditoriaPage';
 import ColaRevisionPage from '@/app/asesor/pages/ColaRevisionPage';
 import DetallePropuestaPage from '@/app/asesor/pages/DetallePropuestaPage';
 import LoginPage from '@/app/auth/pages/LoginPage';
+import OlvideContrasenaPage from '@/app/auth/pages/OlvideContrasenaPage';
+import RegistroPage from '@/app/auth/pages/RegistroPage';
+import RestablecerContrasenaPage from '@/app/auth/pages/RestablecerContrasenaPage';
+import VerificarCorreoPage from '@/app/auth/pages/VerificarCorreoPage';
 import ComoSeCalculoPage from '@/app/inversionista/pages/ComoSeCalculoPage';
 import ComparadorPage from '@/app/inversionista/pages/ComparadorPage';
 import CuestionarioPage from '@/app/inversionista/pages/CuestionarioPage';
@@ -33,10 +37,19 @@ const AdvisorTab = createBottomTabNavigator<AdvisorTabParamList>();
 
 const sinHeader = { headerShown: false } as const;
 
+/**
+ * Entrar, crear cuenta y recuperarla. Las tres pantallas de código (`VerificarCorreo`,
+ * `RestablecerContrasena`) no navegan al terminar: al haber token, este componente vuelve
+ * a decidir y monta el stack del rol. Por eso el AuthStack no conoce a los otros dos.
+ */
 function AuthStack() {
   return (
     <Auth.Navigator screenOptions={sinHeader}>
       <Auth.Screen name="Login" component={LoginPage} />
+      <Auth.Screen name="Registro" component={RegistroPage} />
+      <Auth.Screen name="VerificarCorreo" component={VerificarCorreoPage} />
+      <Auth.Screen name="OlvideContrasena" component={OlvideContrasenaPage} />
+      <Auth.Screen name="RestablecerContrasena" component={RestablecerContrasenaPage} />
     </Auth.Navigator>
   );
 }

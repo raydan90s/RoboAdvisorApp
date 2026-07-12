@@ -4,8 +4,20 @@
  * de un inversionista.
  */
 
+/**
+ * El correo viaja como param entre pantallas (no en un estado global) porque es lo único
+ * que las une: el backend identifica al usuario por su correo hasta que exista un token,
+ * y antes de verificar no hay token que guardar.
+ */
 export type AuthStackParamList = {
   Login: undefined;
+  Registro: undefined;
+  /** Canjea el código de 6 dígitos por el token. Se llega desde Registro o desde un
+   *  login con 403 (cuenta creada pero nunca verificada). */
+  VerificarCorreo: { email: string };
+  OlvideContrasena: undefined;
+  /** Código + contraseña nueva. `email` viene de la pantalla anterior. */
+  RestablecerContrasena: { email: string };
 };
 
 /**

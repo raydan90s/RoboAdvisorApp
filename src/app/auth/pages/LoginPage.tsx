@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import {
@@ -16,12 +17,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/services/http';
+import type { AuthStackParamList } from '@/types/navigation';
 
 import { login } from '../services/authApi';
 
 type Campo = 'email' | 'password';
+type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
-export default function LoginPage() {
+export default function LoginPage({ navigation }: Props) {
   const { signIn } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -35,13 +38,26 @@ export default function LoginPage() {
 
   async function onSubmit() {
     if (!puedeEnviar) return;
+    const correo = email.trim().toLowerCase();
+
     setEnviando(true);
     setError(null);
     try {
       // El rol viene en la respuesta: RootNavigator reacciona solo y monta el
       // navegador del inversionista o el del asesor.
-      await signIn(await login({ email: email.trim(), password }));
+      await signIn(await login({ email: correo, password }));
     } catch (e) {
+      // 403 = la cuenta existe y la contraseña es correcta, pero el correo nunca se
+      // verificó. El backend ya reenvió el código antes de rebotar, así que no se muestra
+      // un error muerto: se lleva al usuario a escribirlo. Distinguirlo del 403 de "cuenta
+      // desactivada" por el status a secas sería ambiguo, de ahí el chequeo del mensaje —
+      // que es contrato con `CORREO_SIN_VERIFICAR` del auth_controller.
+      if (e instanceof ApiError && e.statusCode === 403 && /verificad/i.test(e.message)) {
+        setEnviando(false);
+        navigation.navigate('VerificarCorreo', { email: correo });
+        return;
+      }
+
       setError(
         e instanceof ApiError ? e.message : 'No se pudo iniciar sesión. Intenta de nuevo.',
       );
@@ -169,6 +185,17 @@ export default function LoginPage() {
                   </TouchableOpacity>
                 </View>
               </View>
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('OlvideContrasena')}
+                disabled={enviando}
+                accessibilityRole="button"
+                className="self-end"
+              >
+                <Text className="text-body font-bold text-brand-mid">
+                  ¿Olvidaste tu contraseña?
+                </Text>
+              </TouchableOpacity>
             </View>
 
             {error ? (
@@ -206,6 +233,17 @@ export default function LoginPage() {
                 </>
               )}
             </TouchableOpacity>
+
+            <View className="flex-row justify-center gap-1">
+              <Text className="text-body text-text-secondary">¿No tienes cuenta?</Text>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Registro')}
+                disabled={enviando}
+                accessibilityRole="button"
+              >
+                <Text className="text-body font-bold text-brand-mid">Crea una</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <Text className="text-center text-caption text-text-muted">
