@@ -1,5 +1,7 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { View } from 'react-native';
 
+import AgenteFab from '@/app/agente/components/AgenteFab';
 import type { InvestorStackParamList } from '@/types/navigation';
 
 import VistaPropuesta from '../components/VistaPropuesta';
@@ -12,8 +14,16 @@ type Props = NativeStackScreenProps<InvestorStackParamList, 'SubcuentaDetalle'>;
  *
  * Por eso acá no hay pantalla nueva sino la misma vista con un `sessionId` — si esto
  * fuera una copia de `PropuestaPage`, cualquier arreglo habría que hacerlo dos veces.
+ *
+ * El asistente flota encima con el `sessionId` de ESTA subcuenta: así el análisis
+ * (perfil, propuesta, elegibilidad) es específico de la subcuenta que se está viendo.
  */
 export default function SubcuentaDetallePage({ route }: Props) {
   const { sessionId, nombre } = route.params;
-  return <VistaPropuesta sessionId={sessionId} titulo={nombre ?? 'Tu subcuenta'} />;
+  return (
+    <View className="flex-1">
+      <VistaPropuesta sessionId={sessionId} titulo={nombre ?? 'Tu subcuenta'} />
+      <AgenteFab sessionId={sessionId} />
+    </View>
+  );
 }

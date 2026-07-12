@@ -23,6 +23,13 @@ export interface TasaInstrumento {
   cumple_monto_minimo: boolean | null;
   interes_estimado: number | null;
   monto_final: number | null;
+
+  /**
+   * La opción que el MOTOR recomienda para ese monto (mayor tasa entre lo elegible que
+   * cubre el mínimo). La elige el backend, no el front ni el LLM: así la tarjeta
+   * destacada y lo que explica la IA son siempre la misma fila.
+   */
+  recomendado: boolean;
 }
 
 export interface CatalogoTasas {
