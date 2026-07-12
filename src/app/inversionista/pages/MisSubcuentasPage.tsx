@@ -247,6 +247,25 @@ export default function MisSubcuentasPage({ navigation }: Props) {
               />
             </View>
 
+            {/* El asistente vive también fuera de la app: el mismo agente, el mismo
+                guardarraíl, contestando por WhatsApp. */}
+            <TouchableOpacity
+              onPress={() => navigation.navigate('VincularWhatsApp')}
+              activeOpacity={0.85}
+              className="flex-row items-center gap-3 rounded-2xl border border-surface-border bg-surface-background p-4"
+            >
+              <Ionicons name="logo-whatsapp" size={24} color={COLORES.exito} />
+              <View className="flex-1">
+                <Text className="text-body font-bold text-text-primary">
+                  Pregúntame por WhatsApp
+                </Text>
+                <Text className="text-caption leading-4 text-text-muted">
+                  Tus inversiones y el catálogo, desde el chat. Vincula tu número.
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={COLORES.textoMuted} />
+            </TouchableOpacity>
+
             {resumen.subcuentas.length === 0 ? (
               <View className="gap-2 rounded-2xl border border-surface-border bg-surface-background p-5">
                 <Text className="text-display font-bold text-text-primary">
