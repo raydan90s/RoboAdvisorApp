@@ -1,11 +1,15 @@
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 
+import { useColores } from '@/context/ThemeContext';
+
 /** Los tres estados que toda pantalla con datos remotos necesita. */
 
 export function Cargando({ mensaje = 'Cargando…' }: { mensaje?: string }) {
+  const colores = useColores();
+
   return (
     <View className="flex-1 items-center justify-center gap-3 bg-surface-canvas p-8">
-      <ActivityIndicator size="large" color="#14375E" />
+      <ActivityIndicator size="large" color={colores.primario} />
       <Text className="text-body text-text-secondary">{mensaje}</Text>
     </View>
   );

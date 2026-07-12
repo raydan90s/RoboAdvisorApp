@@ -6,7 +6,7 @@ import ProviderSelector from '@/app/agente/components/ProviderSelector';
 import SourceChips from '@/app/agente/components/SourceChips';
 import { getProviders } from '@/app/agente/services/agentApi';
 import type { ProviderInfo, SimuladorResponse } from '@/app/agente/services/agentApi';
-import { COLORES } from '@/constants/colores';
+import { useColores } from '@/context/ThemeContext';
 
 interface Props {
   recomendacion: SimuladorResponse | null;
@@ -44,6 +44,7 @@ export default function RecomendacionIA({
   pista,
   onPedir,
 }: Props) {
+  const colores = useColores();
   // El motor de IA con el que se (re)genera esta recomendación. Mismo patrón que el
   // selector del chat: se puede correr la MISMA recomendación con otro motor.
   const [providers, setProviders] = useState<ProviderInfo[]>([]);
@@ -78,7 +79,7 @@ export default function RecomendacionIA({
   if (cargando) {
     return (
       <View className="flex-row items-center gap-3 rounded-2xl bg-brandAlpha-primarySoft p-5">
-        <ActivityIndicator color={COLORES.primario} />
+        <ActivityIndicator color={colores.primario} />
         <Text className="text-body text-text-secondary">
           Analizando las opciones del catálogo…
         </Text>
@@ -90,7 +91,7 @@ export default function RecomendacionIA({
     return (
       <View className="gap-3 rounded-2xl bg-brandAlpha-primarySoft p-5">
         <View className="flex-row items-center gap-2">
-          <Ionicons name="sparkles" size={16} color={COLORES.primario} />
+          <Ionicons name="sparkles" size={16} color={colores.primario} />
           <Text className="text-caption font-bold uppercase text-brand-primary">
             Recomendación con IA
           </Text>
@@ -120,7 +121,7 @@ export default function RecomendacionIA({
           <Ionicons
             name="sparkles"
             size={15}
-            color={habilitado ? '#FFFFFF' : COLORES.textoMuted}
+            color={habilitado ? colores.textoSobrePrimario : colores.textoMuted}
           />
           <Text
             className={`text-body font-bold ${
@@ -148,7 +149,7 @@ export default function RecomendacionIA({
   return (
     <View className="gap-3 rounded-2xl bg-brandAlpha-primarySoft p-5">
       <View className="flex-row flex-wrap items-center gap-2">
-        <Ionicons name="sparkles" size={16} color={COLORES.primario} />
+        <Ionicons name="sparkles" size={16} color={colores.primario} />
         <Text className="flex-1 text-caption font-bold uppercase text-brand-primary">
           Recomendación con IA
         </Text>
@@ -167,7 +168,7 @@ export default function RecomendacionIA({
           accessibilityRole="button"
           className="flex-row items-center gap-1"
         >
-          <Ionicons name="refresh" size={13} color={COLORES.primario} />
+          <Ionicons name="refresh" size={13} color={colores.primario} />
           <Text className="text-caption font-bold text-brand-primary">Otra vez</Text>
         </TouchableOpacity>
       </View>
@@ -184,7 +185,7 @@ export default function RecomendacionIA({
         <Ionicons
           name={recomendacion.guardrail_passed ? 'shield-checkmark' : 'alert-circle'}
           size={12}
-          color={recomendacion.guardrail_passed ? COLORES.exito : COLORES.advertencia}
+          color={recomendacion.guardrail_passed ? colores.exito : colores.advertencia}
         />
         <Text className="flex-1 text-caption text-text-muted">
           {recomendacion.guardrail_passed

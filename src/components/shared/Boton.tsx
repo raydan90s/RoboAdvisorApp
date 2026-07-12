@@ -1,5 +1,7 @@
 import { ActivityIndicator, Text, TouchableOpacity } from 'react-native';
 
+import { useColores } from '@/context/ThemeContext';
+
 interface BotonProps {
   titulo: string;
   onPress: () => void;
@@ -17,6 +19,7 @@ export default function Boton({
   deshabilitado = false,
   cargando = false,
 }: BotonProps) {
+  const colores = useColores();
   const inactivo = deshabilitado || cargando;
   const fondo =
     variante === 'primario'
@@ -34,7 +37,9 @@ export default function Boton({
       className={`items-center justify-center rounded-2xl px-6 py-3.5 ${fondo}`}
     >
       {cargando ? (
-        <ActivityIndicator color={variante === 'primario' ? '#FFFFFF' : '#1E5C9B'} />
+        <ActivityIndicator
+          color={variante === 'primario' ? colores.textoSobrePrimario : colores.azulMedio}
+        />
       ) : (
         <Text className={`text-body-md font-bold ${letra}`}>{titulo}</Text>
       )}

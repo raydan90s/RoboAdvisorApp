@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useColores } from '@/context/ThemeContext';
 import { ApiError } from '@/services/http';
 
 import { enviarMensaje, getProviders, type ProviderInfo } from '../services/agentApi';
@@ -53,6 +54,7 @@ export default function AgentSheet({ visible, onClose, sessionId }: Props) {
   const [providers, setProviders] = useState<ProviderInfo[]>([]);
   const [proveedor, setProveedor] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
+  const colores = useColores();
 
   // Baja el scroll al último mensaje cada vez que llega uno.
   useEffect(() => {
@@ -134,7 +136,14 @@ export default function AgentSheet({ visible, onClose, sessionId }: Props) {
       <View className="flex-1 justify-end">
         <Pressable
           onPress={onClose}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)' }}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: colores.velo,
+          }}
         />
 
         <KeyboardAvoidingView
@@ -152,7 +161,7 @@ export default function AgentSheet({ visible, onClose, sessionId }: Props) {
             <View className="flex-row items-center justify-between border-b border-surface-border px-4 py-3">
               <View className="flex-1 flex-row items-center gap-3">
                 <View className="h-10 w-10 items-center justify-center rounded-2xl bg-brandAlpha-primarySoft">
-                  <Ionicons name="sparkles" size={18} color="#1E3A8A" />
+                  <Ionicons name="sparkles" size={18} color={colores.primario} />
                 </View>
                 <Text className="text-body-md font-bold text-text-primary">Asistente</Text>
               </View>
@@ -170,7 +179,7 @@ export default function AgentSheet({ visible, onClose, sessionId }: Props) {
                   activeOpacity={0.7}
                   className="h-8 w-8 items-center justify-center rounded-xl bg-surface-secondary"
                 >
-                  <Ionicons name="close" size={18} color="#71717A" />
+                  <Ionicons name="close" size={18} color={colores.textoMuted} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -195,7 +204,11 @@ export default function AgentSheet({ visible, onClose, sessionId }: Props) {
                       onPress={() => enviar(s)}
                       className="flex-row items-center gap-2 self-start rounded-full border border-brandAlpha-primaryMedium bg-surface-background px-3.5 py-2"
                     >
-                      <Ionicons name="chatbubble-ellipses-outline" size={13} color="#1E3A8A" />
+                      <Ionicons
+                        name="chatbubble-ellipses-outline"
+                        size={13}
+                        color={colores.primario}
+                      />
                       <Text className="text-body text-brand-primary">{s}</Text>
                     </TouchableOpacity>
                   ))}
@@ -209,7 +222,7 @@ export default function AgentSheet({ visible, onClose, sessionId }: Props) {
                 value={input}
                 onChangeText={setInput}
                 placeholder="Pregunta sobre tu propuesta…"
-                placeholderTextColor="#A1A1AA"
+                placeholderTextColor={colores.textoMuted}
                 multiline
                 onSubmitEditing={() => enviar(input)}
                 blurOnSubmit={false}
@@ -223,7 +236,13 @@ export default function AgentSheet({ visible, onClose, sessionId }: Props) {
                   !input.trim() || enviando ? 'bg-surface-divider' : 'bg-brand-primary'
                 }`}
               >
-                <Ionicons name="arrow-up" size={20} color="#FFFFFF" />
+                <Ionicons
+                  name="arrow-up"
+                  size={20}
+                  color={
+                    !input.trim() || enviando ? colores.textoMuted : colores.textoSobrePrimario
+                  }
+                />
               </TouchableOpacity>
             </View>
           </SafeAreaView>

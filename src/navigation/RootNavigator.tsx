@@ -19,6 +19,7 @@ import SimuladorPage from '@/app/inversionista/pages/SimuladorPage';
 import SubcuentaDetallePage from '@/app/inversionista/pages/SubcuentaDetallePage';
 import VincularWhatsAppPage from '@/app/whatsapp/pages/VincularWhatsAppPage';
 import { useAuth } from '@/context/AuthContext';
+import { useColores } from '@/context/ThemeContext';
 import type {
   AdvisorStackParamList,
   AdvisorTabParamList,
@@ -73,12 +74,14 @@ function InvestorStack() {
 /** Cola y auditoría son dos listas independientes: el asesor salta entre ellas, no
  *  las recorre en orden. Eso son tabs. */
 function AdvisorTabs() {
+  const colores = useColores();
+
   return (
     <AdvisorTab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#14375E',
-        tabBarInactiveTintColor: '#A1A1AA',
+        tabBarActiveTintColor: colores.primario,
+        tabBarInactiveTintColor: colores.textoMuted,
       }}
     >
       <AdvisorTab.Screen
@@ -123,13 +126,14 @@ function AdvisorStack() {
  */
 export default function RootNavigator() {
   const { token, role, isLoading } = useAuth();
+  const colores = useColores();
 
   // Mientras se lee la sesión guardada: sin esto se vería un parpadeo del login
   // antes de restaurar al usuario ya logueado.
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-surface-background">
-        <ActivityIndicator size="large" color="#14375E" />
+        <ActivityIndicator size="large" color={colores.primario} />
       </View>
     );
   }

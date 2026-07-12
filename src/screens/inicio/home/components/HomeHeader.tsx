@@ -1,6 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Text, TouchableOpacity, View } from 'react-native';
 
+import BotonTema from '@/components/shared/BotonTema';
+import { useColores } from '@/context/ThemeContext';
+
 interface HomeHeaderProps {
   title: string;
   subtitle?: string;
@@ -14,8 +17,10 @@ export default function HomeHeader({
   actionIcon = 'settings-outline',
   onAction,
 }: HomeHeaderProps) {
+  const colores = useColores();
+
   return (
-    <View className="flex-row items-center justify-between border-b border-surface-border px-5 py-4">
+    <View className="flex-row items-center justify-between border-b border-surface-border bg-surface-background px-5 py-4">
       <View className="flex-1 pr-3">
         <Text className="text-heading font-bold text-text-primary" numberOfLines={1}>
           {title}
@@ -25,13 +30,17 @@ export default function HomeHeader({
         ) : null}
       </View>
 
-      <TouchableOpacity
-        onPress={onAction}
-        activeOpacity={0.85}
-        className="h-10 w-10 items-center justify-center rounded-full bg-surface-secondary"
-      >
-        <Ionicons name={actionIcon} size={20} color="#18181B" />
-      </TouchableOpacity>
+      <View className="flex-row items-center gap-2">
+        <BotonTema />
+
+        <TouchableOpacity
+          onPress={onAction}
+          activeOpacity={0.85}
+          className="h-10 w-10 items-center justify-center rounded-full bg-surface-secondary"
+        >
+          <Ionicons name={actionIcon} size={20} color={colores.textoPrimario} />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }

@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
-import { COLORES } from '@/constants/colores';
+import { useColores } from '@/context/ThemeContext';
 import { formatearExplicacion } from '@/utils/explicacion';
 
 interface Props {
@@ -36,6 +36,7 @@ export default function ExplicacionIA({
     [texto, conservarDisclaimer]
   );
   const [abierto, setAbierto] = useState(false);
+  const colores = useColores();
 
   if (!resumen) return null;
 
@@ -44,7 +45,7 @@ export default function ExplicacionIA({
   return (
     <View className="gap-3 rounded-2xl bg-brandAlpha-primarySoft p-5">
       <View className="flex-row items-center gap-2">
-        <Ionicons name="sparkles" size={16} color={COLORES.primario} />
+        <Ionicons name="sparkles" size={16} color={colores.primario} />
         <Text className="text-caption font-bold uppercase text-brand-primary">{titulo}</Text>
       </View>
 
@@ -86,7 +87,7 @@ export default function ExplicacionIA({
           <Ionicons
             name={abierto ? 'chevron-up' : 'chevron-down'}
             size={14}
-            color={COLORES.primario}
+            color={colores.primario}
           />
         </TouchableOpacity>
       ) : null}

@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
-import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,6 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/services/http';
 import type { ComoSeCalculoParams } from '@/types/navigation';
 import { usd } from '@/utils/formato';
+import { useColores } from '@/context/ThemeContext';
 
 import { getBreakdown } from '../services/investorApi';
 import type { ProfilingBreakdown } from '../types/inversionista';
@@ -31,6 +31,7 @@ type Ruta = RouteProp<{ ComoSeCalculo: ComoSeCalculoParams }, 'ComoSeCalculo'>;
  * que las reglas son la fuente de verdad y no un número escrito a mano.
  */
 export default function ComoSeCalculoPage() {
+  const colores = useColores();
   const navigation = useNavigation();
   const route = useRoute<Ruta>();
   const { user } = useAuth();
@@ -80,7 +81,6 @@ export default function ComoSeCalculoPage() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface-background">
-      <StatusBar style="dark" />
 
       <View className="flex-row items-center gap-3 border-b border-surface-border px-5 py-4">
         <BotonAtras onPress={navigation.goBack} />
@@ -171,7 +171,7 @@ export default function ComoSeCalculoPage() {
         {datos.regla_institucion ? (
           <View className="gap-2 rounded-2xl border border-surface-border bg-surface-background p-5">
             <View className="flex-row items-center gap-2">
-              <Ionicons name="shield-checkmark-outline" size={16} color="#14375E" />
+              <Ionicons name="shield-checkmark-outline" size={16} color={colores.primario} />
               <Text className="text-caption font-bold uppercase text-text-secondary">
                 Solidez del emisor
               </Text>

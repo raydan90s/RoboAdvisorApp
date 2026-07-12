@@ -1,4 +1,3 @@
-import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/context/AuthContext';
@@ -11,7 +10,6 @@ export default function HomePage() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface-background">
-      <StatusBar style="dark" />
       <HomeHeader
         title={user ? `Hola, ${user.name}` : 'Inicio'}
         subtitle="Inversionista"

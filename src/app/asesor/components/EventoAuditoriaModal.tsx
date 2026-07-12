@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import { fechaHoraLarga, porcentaje, usd } from '@/utils/formato';
+import { useColores } from '@/context/ThemeContext';
 
 import { getPropuesta } from '../services/advisorApi';
 import type { EventoAuditoria, PropuestaDetalle } from '../types/asesor';
@@ -85,6 +86,7 @@ export default function EventoAuditoriaModal({
   onCerrar: () => void;
   onVerPropuesta?: () => void;
 }) {
+  const colores = useColores();
   /** La propuesta que el evento audita: solo para poner nombres donde hay uuids. */
   const [propuesta, setPropuesta] = useState<PropuestaDetalle | null>(null);
 
@@ -123,7 +125,11 @@ export default function EventoAuditoriaModal({
       animationType="slide"
       onRequestClose={onCerrar}
     >
-      <Pressable className="flex-1 justify-end bg-black/40" onPress={onCerrar}>
+      <Pressable
+        className="flex-1 justify-end"
+        style={{ backgroundColor: colores.velo }}
+        onPress={onCerrar}
+      >
         {/* El sheet captura el toque: solo el fondo cierra. */}
         <Pressable
           onPress={() => {}}
@@ -145,7 +151,7 @@ export default function EventoAuditoriaModal({
                   hitSlop={12}
                   accessibilityLabel="Cerrar el detalle"
                 >
-                  <Ionicons name="close" size={24} color="#6B7280" />
+                  <Ionicons name="close" size={24} color={colores.textoMuted} />
                 </TouchableOpacity>
               </View>
 
@@ -167,7 +173,7 @@ export default function EventoAuditoriaModal({
                   <Text className="text-caption uppercase text-text-muted">Entidad</Text>
                   {esPropuesta && !propuesta ? (
                     <View className="flex-row items-center gap-2 py-0.5">
-                      <ActivityIndicator size="small" color="#6B7280" />
+                      <ActivityIndicator size="small" color={colores.textoMuted} />
                       <Text className="text-body text-text-muted">
                         Resolviendo la propuesta…
                       </Text>
@@ -247,7 +253,7 @@ export default function EventoAuditoriaModal({
                     <Text className="text-body font-bold text-brand-primary">
                       Ver la propuesta auditada
                     </Text>
-                    <Ionicons name="chevron-forward" size={18} color="#14375E" />
+                    <Ionicons name="chevron-forward" size={18} color={colores.primario} />
                   </TouchableOpacity>
                 ) : null}
 

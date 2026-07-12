@@ -3,6 +3,8 @@ import type { LayoutChangeEvent } from 'react-native';
 import { Text, View } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 
+import { useColores } from '@/context/ThemeContext';
+
 /**
  * Gráfico de líneas genérico, a mano con `react-native-svg` (mismo enfoque que
  * `DonutPortafolio`): el proyecto no trae una librería de charts, y agregar una solo
@@ -18,6 +20,7 @@ export interface LineChartPoint {
 
 interface Props {
   points: LineChartPoint[];
+  /** Por defecto, el azul de marca del tema activo. */
   color?: string;
   height?: number;
   formatValue?: (valor: number) => string;
@@ -28,11 +31,13 @@ const PADDING_VERTICAL = 14;
 
 export default function LineChart({
   points,
-  color = '#14375E',
+  color,
   height = ALTURA_DEFAULT,
   formatValue = (v) => v.toFixed(2),
 }: Props) {
   const [ancho, setAncho] = useState(0);
+  const colores = useColores();
+  const trazo = color ?? colores.primario;
 
   function onLayout(e: LayoutChangeEvent) {
     setAncho(e.nativeEvent.layout.width);
@@ -80,20 +85,20 @@ export default function LineChart({
           <Svg width={ancho} height={height}>
             <Defs>
               <LinearGradient id="lineChartArea" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0" stopColor={color} stopOpacity={0.18} />
-                <Stop offset="1" stopColor={color} stopOpacity={0} />
+                <Stop offset="0" stopColor={trazo} stopOpacity={0.18} />
+                <Stop offset="1" stopColor={trazo} stopOpacity={0} />
               </LinearGradient>
             </Defs>
             <Path d={area} fill="url(#lineChartArea)" stroke="none" />
             <Path
               d={linea}
-              stroke={color}
+              stroke={trazo}
               strokeWidth={2.5}
               fill="none"
               strokeLinejoin="round"
               strokeLinecap="round"
             />
-            <Circle cx={ultimoPunto.x} cy={ultimoPunto.y} r={4} fill={color} />
+            <Circle cx={ultimoPunto.x} cy={ultimoPunto.y} r={4} fill={trazo} />
           </Svg>
         ) : null}
       </View>

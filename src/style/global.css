@@ -1,3 +1,125 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/**
+ * Tema claro / oscuro de Brokeate.
+ *
+ * Cada token es un triplete RGB sin `rgb()` para que tailwind.config.js pueda
+ * componerlo con `<alpha-value>`: `rgb(var(--brand-primary) / <alpha-value>)`.
+ *
+ * NativeWind lee `:root` y `.dark:root` (con darkMode: 'class') y los convierte en
+ * variables de tiempo de ejecución: al cambiar el colorScheme, TODA clase que use un
+ * token —bg-surface-background, text-text-primary…— se repinta sola. Por eso las
+ * pantallas no llevan variantes `dark:`.
+ *
+ * Regla del modo oscuro: las superficies llenas (botón primario, éxito, error) NO se
+ * oscurecen, se ACLARAN, y su etiqueta pasa a tinta oscura (--text-on-primary). Un
+ * #14375E sobre un fondo #0A111D sería un botón invisible.
+ */
+@layer base {
+  :root {
+    /* Marca */
+    --brand-primary: 20 55 94; /* #14375E — botones, tabs activos */
+    --brand-ink: 10 37 64; /* #0A2540 — superficie oscura (portada de noticia) */
+    --brand-mid: 30 92 155; /* #1E5C9B */
+    --brand-pale: 58 133 201; /* #3A85C9 */
+    --brand-accent: 27 138 90; /* #1B8A5A — verde institucional: aprobado/éxito */
+    --brand-gold: 183 146 26; /* #B7921A — segmento "Oro" de los donuts */
+
+    /* Texto */
+    --text-primary: 10 37 64;
+    --text-secondary: 58 63 71;
+    --text-muted: 107 114 128;
+    --text-on-primary: 255 255 255; /* sobre brand-primary y state-* */
+    --text-on-accent: 255 255 255;
+
+    /* Superficies */
+    --surface-background: 255 255 255; /* tarjetas */
+    --surface-secondary: 247 248 250;
+    --surface-elevated: 248 250 254;
+    --surface-border: 232 235 240;
+    --surface-divider: 232 235 240;
+    --surface-canvas: 242 245 249; /* fondo de pantalla */
+
+    /* Semánticos */
+    --state-success: 27 138 90;
+    --state-warning: 199 119 0;
+    --state-error: 192 54 44;
+    --state-info: 30 92 155;
+
+    /* Fondos de chip: pasteles en claro, tintes profundos en oscuro */
+    --brand-soft: 235 242 250; /* #EBF2FA */
+    --accent-soft: 230 245 238; /* #E6F5EE */
+    --success-soft: 230 245 238;
+    --error-soft: 255 240 239;
+    --warning-soft: 255 248 237;
+
+    /* Perfil de riesgo */
+    --perfil-conservador: 20 55 94;
+    --perfil-moderado: 199 119 0;
+    --perfil-agresivo: 192 54 44;
+
+    /* Velo de los modales */
+    --overlay: 0 0 0;
+
+    /* Serie de los gráficos (donut / línea) */
+    --chart-1: 10 37 64;
+    --chart-2: 30 92 155;
+    --chart-3: 58 133 201;
+    --chart-4: 155 184 212;
+    --chart-5: 27 138 90;
+  }
+
+  .dark:root {
+    /* Marca — aclarada para vivir sobre fondo oscuro */
+    --brand-primary: 91 155 224; /* #5B9BE0 */
+    --brand-ink: 22 35 58; /* #16233A — sigue siendo superficie, no titular */
+    --brand-mid: 124 178 232; /* #7CB2E8 */
+    --brand-pale: 159 200 238; /* #9FC8EE */
+    --brand-accent: 53 197 138; /* #35C58A */
+    --brand-gold: 216 178 63; /* #D8B23F */
+
+    /* Texto */
+    --text-primary: 232 238 247; /* #E8EEF7 */
+    --text-secondary: 182 192 207; /* #B6C0CF */
+    --text-muted: 138 151 168; /* #8A97A8 */
+    --text-on-primary: 10 18 32; /* #0A1220 — tinta sobre botón claro */
+    --text-on-accent: 6 35 26;
+
+    /* Superficies */
+    --surface-background: 18 27 43; /* #121B2B — tarjetas */
+    --surface-secondary: 27 37 55; /* #1B2537 */
+    --surface-elevated: 30 41 61; /* #1E293D */
+    --surface-border: 42 53 71; /* #2A3547 */
+    --surface-divider: 42 53 71;
+    --surface-canvas: 10 17 29; /* #0A111D — fondo de pantalla */
+
+    /* Semánticos — aclarados para conservar contraste sobre superficie oscura */
+    --state-success: 53 197 138;
+    --state-warning: 224 163 60;
+    --state-error: 241 104 92;
+    --state-info: 124 178 232;
+
+    /* Chips */
+    --brand-soft: 26 39 64; /* #1A2740 */
+    --accent-soft: 19 50 38; /* #133226 */
+    --success-soft: 19 50 38;
+    --error-soft: 58 30 28; /* #3A1E1C */
+    --warning-soft: 51 40 15; /* #33280F */
+
+    /* Perfil de riesgo */
+    --perfil-conservador: 107 166 224;
+    --perfil-moderado: 224 163 60;
+    --perfil-agresivo: 241 104 92;
+
+    --overlay: 0 0 0;
+
+    /* Serie de los gráficos: en oscuro el navy se pierde contra el fondo */
+    --chart-1: 124 178 232;
+    --chart-2: 91 155 224;
+    --chart-3: 159 200 238;
+    --chart-4: 108 130 158;
+    --chart-5: 53 197 138;
+  }
+}

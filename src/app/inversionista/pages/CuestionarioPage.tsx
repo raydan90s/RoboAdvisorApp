@@ -1,5 +1,4 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -18,6 +17,7 @@ import { Cargando, ErrorEstado } from '@/components/shared/Estados';
 import { ApiError } from '@/services/http';
 import type { InvestorStackParamList } from '@/types/navigation';
 import { montoANumero, montoConSeparadores } from '@/utils/formato';
+import { useColores } from '@/context/ThemeContext';
 
 import FormularioPreguntas from '../components/FormularioPreguntas';
 import { crearPerfil, getPreguntas } from '../services/investorApi';
@@ -34,6 +34,7 @@ type Props = NativeStackScreenProps<InvestorStackParamList, 'Cuestionario'>;
  * de las respuestas y `scoring_rules` hace el resto.
  */
 export default function CuestionarioPage({ navigation }: Props) {
+  const colores = useColores();
   const [preguntas, setPreguntas] = useState<Pregunta[] | null>(null);
   const [errorCarga, setErrorCarga] = useState<string | null>(null);
 
@@ -99,7 +100,6 @@ export default function CuestionarioPage({ navigation }: Props) {
 
   return (
     <SafeAreaView className="flex-1 bg-surface-background">
-      <StatusBar style="dark" />
 
       <View className="flex-row items-center gap-3 border-b border-surface-border px-5 py-4">
         <BotonAtras onPress={navigation.goBack} />
@@ -130,7 +130,7 @@ export default function CuestionarioPage({ navigation }: Props) {
               value={monto}
               onChangeText={(texto) => setMonto(montoConSeparadores(texto))}
               placeholder="20.000"
-              placeholderTextColor="#A1A1AA"
+              placeholderTextColor={colores.textoMuted}
               keyboardType="numeric"
               inputMode="decimal"
               className="rounded-2xl border border-surface-border bg-surface-elevated px-4 py-4 text-display font-bold text-text-primary"
@@ -165,7 +165,7 @@ export default function CuestionarioPage({ navigation }: Props) {
             }`}
           >
             {enviando ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <ActivityIndicator color={colores.textoSobrePrimario} />
             ) : (
               <Text
                 className={`text-body-md font-bold ${

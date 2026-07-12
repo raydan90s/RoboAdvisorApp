@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +9,7 @@ import BotonAtras from '@/components/shared/BotonAtras';
 import { Cargando, ErrorEstado } from '@/components/shared/Estados';
 import { ApiError } from '@/services/http';
 import type { InvestorStackParamList } from '@/types/navigation';
+import { useColores } from '@/context/ThemeContext';
 
 import {
   desvincular,
@@ -90,6 +90,7 @@ function CodigoVivo({ codigo, onExpirar }: { codigo: LinkCode; onExpirar: () => 
  * quien escribe desde ese número es quien está logueado en esta app.
  */
 export default function VincularWhatsAppPage({ navigation }: Props) {
+  const colores = useColores();
   const [estado, setEstado] = useState<WhatsAppStatus | null>(null);
   const [codigo, setCodigo] = useState<LinkCode | null>(null);
   const [cargando, setCargando] = useState(true);
@@ -154,7 +155,6 @@ export default function VincularWhatsAppPage({ navigation }: Props) {
 
   return (
     <SafeAreaView className="flex-1 bg-surface-background">
-      <StatusBar style="dark" />
 
       <View className="flex-row items-center gap-3 border-b border-surface-border px-5 py-4">
         <BotonAtras onPress={() => navigation.goBack()} />
@@ -166,7 +166,7 @@ export default function VincularWhatsAppPage({ navigation }: Props) {
             Pregunta por tus inversiones desde el chat
           </Text>
         </View>
-        <Ionicons name="logo-whatsapp" size={24} color="#1B8A5A" />
+        <Ionicons name="logo-whatsapp" size={24} color={colores.exito} />
       </View>
 
       {cargando ? (
@@ -182,7 +182,7 @@ export default function VincularWhatsAppPage({ navigation }: Props) {
             <>
               <View className="gap-3 rounded-2xl border border-surface-border bg-surface-background p-5">
                 <View className="flex-row items-center gap-2">
-                  <Ionicons name="checkmark-circle" size={20} color="#1B8A5A" />
+                  <Ionicons name="checkmark-circle" size={20} color={colores.exito} />
                   <Text className="text-body-md font-bold text-text-primary">
                     WhatsApp vinculado
                   </Text>
@@ -200,7 +200,7 @@ export default function VincularWhatsAppPage({ navigation }: Props) {
                 activeOpacity={0.85}
                 className="flex-row items-center justify-center gap-2 rounded-2xl border border-surface-border py-4"
               >
-                <Ionicons name="unlink-outline" size={18} color="#C0362C" />
+                <Ionicons name="unlink-outline" size={18} color={colores.error} />
                 <Text className="text-body font-bold text-state-error">
                   Desvincular este número
                 </Text>
@@ -252,7 +252,7 @@ export default function VincularWhatsAppPage({ navigation }: Props) {
                     activeOpacity={0.85}
                     className="flex-row items-center justify-center gap-2 rounded-2xl bg-state-success py-4"
                   >
-                    <Ionicons name="logo-whatsapp" size={20} color="#FFFFFF" />
+                    <Ionicons name="logo-whatsapp" size={20} color={colores.textoSobrePrimario} />
                     <Text className="text-body-md font-bold text-text-onPrimary">
                       Abrir WhatsApp con el mensaje listo
                     </Text>
@@ -278,7 +278,7 @@ export default function VincularWhatsAppPage({ navigation }: Props) {
                     ocupado ? 'bg-brandAlpha-primaryMedium' : 'bg-brand-primary'
                   }`}
                 >
-                  <Ionicons name="key-outline" size={20} color="#FFFFFF" />
+                  <Ionicons name="key-outline" size={20} color={colores.textoSobrePrimario} />
                   <Text className="text-body-md font-bold text-text-onPrimary">
                     Generar código de vinculación
                   </Text>

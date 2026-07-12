@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
-import { StatusBar } from 'expo-status-bar';
 import { useCallback, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,6 +13,7 @@ import HomeHeader from '@/screens/inicio/home/components/HomeHeader';
 import { ApiError } from '@/services/http';
 import type { InvestorStackParamList } from '@/types/navigation';
 import { puntos, usd } from '@/utils/formato';
+import { useColores } from '@/context/ThemeContext';
 
 import { getInvestor } from '../services/investorApi';
 import type { Investor } from '../types/inversionista';
@@ -29,6 +29,7 @@ type Props = NativeStackScreenProps<InvestorStackParamList, 'Inicio'>;
  * para poder grabar el flujo en vivo.
  */
 export default function InicioPage({ navigation }: Props) {
+  const colores = useColores();
   const { user, logout } = useAuth();
 
   const [perfil, setPerfil] = useState<Investor | null>(null);
@@ -64,7 +65,6 @@ export default function InicioPage({ navigation }: Props) {
 
   return (
     <SafeAreaView className="flex-1 bg-surface-background">
-      <StatusBar style="dark" />
       <HomeHeader
         title={user ? `Hola, ${user.name}` : 'Inicio'}
         subtitle="Inversionista"
@@ -127,7 +127,7 @@ export default function InicioPage({ navigation }: Props) {
                 <Text className="text-body-md font-bold text-text-onPrimary">
                   Ver mi propuesta
                 </Text>
-                <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
+                <Ionicons name="chevron-forward" size={20} color={colores.textoSobrePrimario} />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -138,7 +138,7 @@ export default function InicioPage({ navigation }: Props) {
                 <Text className="text-body-md font-bold text-brand-primary">
                   ¿Cómo se calculó mi perfil?
                 </Text>
-                <Ionicons name="chevron-forward" size={20} color="#14375E" />
+                <Ionicons name="chevron-forward" size={20} color={colores.primario} />
               </TouchableOpacity>
 
               <TouchableOpacity

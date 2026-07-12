@@ -2,6 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Modal, Pressable, Text, TouchableOpacity, View } from 'react-native';
 
+import { useColores } from '@/context/ThemeContext';
+
 import type { ProviderInfo } from '../services/agentApi';
 
 /**
@@ -10,7 +12,8 @@ import type { ProviderInfo } from '../services/agentApi';
  * (el backend nunca manda las keys, solo si existen).
  */
 
-// Identidad visual de cada proveedor (nombre corto + color de marca).
+// Identidad visual de cada proveedor. Estos colores son de marca ajena (Google, OpenAI,
+// Anthropic, DeepSeek): NO cambian con el tema, igual que no cambia su logo.
 const META: Record<string, { label: string; color: string }> = {
   google: { label: 'Gemini', color: '#4285F4' },
   openai: { label: 'OpenAI', color: '#10A37F' },
@@ -18,7 +21,9 @@ const META: Record<string, { label: string; color: string }> = {
   deepseek: { label: 'DeepSeek', color: '#4D6BFE' },
 };
 
-const meta = (id: string) => META[id] ?? { label: id, color: '#71717A' };
+// Gris del medio: legible contra fondo claro y oscuro (el proveedor desconocido no
+// tiene marca que respetar).
+const meta = (id: string) => META[id] ?? { label: id, color: '#8A97A8' };
 
 interface Props {
   providers: ProviderInfo[];
@@ -30,6 +35,7 @@ interface Props {
 
 export default function ProviderSelector({ providers, value, onChange, onOpen }: Props) {
   const [abierto, setAbierto] = useState(false);
+  const colores = useColores();
 
   const abrir = () => {
     onOpen?.();
@@ -51,14 +57,14 @@ export default function ProviderSelector({ providers, value, onChange, onOpen }:
       >
         <View style={{ backgroundColor: m.color }} className="h-2.5 w-2.5 rounded-full" />
         <Text className="text-caption font-semibold text-text-primary">{m.label}</Text>
-        <Ionicons name="chevron-down" size={12} color="#71717A" />
+        <Ionicons name="chevron-down" size={12} color={colores.textoMuted} />
       </TouchableOpacity>
 
       {/* Menú */}
       <Modal visible={abierto} transparent animationType="fade" onRequestClose={() => setAbierto(false)}>
         <Pressable
           onPress={() => setAbierto(false)}
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' }}
+          style={{ flex: 1, backgroundColor: colores.velo }}
           className="items-center justify-center px-8"
         >
           <View className="w-full max-w-sm gap-1 rounded-2xl bg-surface-background p-3">
@@ -85,6 +91,8 @@ export default function ProviderSelector({ providers, value, onChange, onOpen }:
                     style={{ backgroundColor: pm.color }}
                     className="h-8 w-8 items-center justify-center rounded-xl"
                   >
+                    {/* Blanco fijo: va sobre el color de marca del proveedor, no sobre
+                        una superficie del tema. */}
                     <Ionicons name="sparkles" size={15} color="#FFFFFF" />
                   </View>
                   <View className="flex-1">
@@ -94,7 +102,7 @@ export default function ProviderSelector({ providers, value, onChange, onOpen }:
                     </Text>
                   </View>
                   {seleccionado ? (
-                    <Ionicons name="checkmark-circle" size={20} color="#1E3A8A" />
+                    <Ionicons name="checkmark-circle" size={20} color={colores.primario} />
                   ) : null}
                 </TouchableOpacity>
               );

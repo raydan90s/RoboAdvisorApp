@@ -1,10 +1,9 @@
 import { Text, View } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 
-import type { AssetAllocation } from '../types/inversionista';
+import { useColores } from '@/context/ThemeContext';
 
-/** Un color por línea. El orden es estable: la leyenda y el donut siempre coinciden. */
-export const COLORES = ['#0A2540', '#1E5C9B', '#3A85C9', '#9BB8D4', '#1B8A5A'];
+import type { AssetAllocation } from '../types/inversionista';
 
 interface DonutProps {
   allocations: AssetAllocation[];
@@ -28,6 +27,8 @@ export default function DonutPortafolio({
   centro,
   etiquetaCentro,
 }: DonutProps) {
+  // Un color por línea. El orden es estable: la leyenda y el donut siempre coinciden.
+  const { grafico, superficieSecundaria } = useColores();
   let acumulado = 0;
 
   return (
@@ -40,7 +41,7 @@ export default function DonutPortafolio({
               cx={LADO / 2}
               cy={LADO / 2}
               r={RADIO}
-              stroke="#F4F4F5"
+              stroke={superficieSecundaria}
               strokeWidth={GROSOR}
               fill="none"
             />
@@ -55,7 +56,7 @@ export default function DonutPortafolio({
                   cx={LADO / 2}
                   cy={LADO / 2}
                   r={RADIO}
-                  stroke={COLORES[i % COLORES.length]}
+                  stroke={grafico[i % grafico.length]}
                   strokeWidth={GROSOR}
                   strokeDasharray={`${largo} ${CIRCUNFERENCIA - largo}`}
                   strokeDashoffset={offset}
@@ -78,7 +79,7 @@ export default function DonutPortafolio({
           <View key={linea.instrumento_code} className="flex-row items-center gap-2">
             <View
               className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: COLORES[i % COLORES.length] }}
+              style={{ backgroundColor: grafico[i % grafico.length] }}
             />
             <Text className="flex-1 text-body text-text-secondary" numberOfLines={1}>
               {linea.nombre}

@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
-import { COLORES } from '@/constants/colores';
+import { useColores } from '@/context/ThemeContext';
 
 import { getCotizaciones, type MarketQuote } from '../services/marketApi';
 
@@ -33,9 +33,10 @@ function formatearPrecio(q: MarketQuote): string {
 }
 
 function Tarjeta({ cotizacion }: { cotizacion: MarketQuote }) {
+  const colores = useColores();
   const sube = cotizacion.change_percent > 0;
   const baja = cotizacion.change_percent < 0;
-  const color = sube ? COLORES.exito : baja ? COLORES.error : COLORES.textoMuted;
+  const color = sube ? colores.exito : baja ? colores.error : colores.textoMuted;
 
   return (
     <View className="w-36 gap-1.5 rounded-2xl border border-surface-border bg-surface-background p-3.5">
@@ -44,9 +45,9 @@ function Tarjeta({ cotizacion }: { cotizacion: MarketQuote }) {
           {cotizacion.symbol}
         </Text>
         {cotizacion.source === 'mock' ? (
-          <Ionicons name="ellipse" size={6} color={COLORES.textoMuted} />
+          <Ionicons name="ellipse" size={6} color={colores.textoMuted} />
         ) : (
-          <Ionicons name="ellipse" size={6} color={COLORES.exito} />
+          <Ionicons name="ellipse" size={6} color={colores.exito} />
         )}
       </View>
 

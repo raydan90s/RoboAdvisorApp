@@ -38,7 +38,9 @@ export default function HomeBody() {
             accepted ? 'border-brand-accent bg-brand-accent' : 'border-surface-divider'
           }`}
         >
-          {accepted ? <Text className="text-caption font-bold">✓</Text> : null}
+          {accepted ? (
+            <Text className="text-caption font-bold text-text-onAccent">✓</Text>
+          ) : null}
         </View>
         <Text className="text-body text-text-secondary">
           Habilitar el botón de continuar
@@ -54,7 +56,7 @@ export default function HomeBody() {
       >
         <Text
           className={`text-body-md font-bold ${
-            isValid ? 'text-text-primary' : 'text-text-muted'
+            isValid ? 'text-text-onAccent' : 'text-text-muted'
           }`}
         >
           Continuar

@@ -2,9 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { Text, TouchableOpacity, View } from 'react-native';
 
 import EstadoBadge from '@/components/shared/EstadoBadge';
+import { useColores } from '@/context/ThemeContext';
 import { porcentaje, puntos, usd } from '@/utils/formato';
 
-import { COLOR_PERFIL } from './BarraCapital';
+import { useColorPerfil } from './BarraCapital';
 import type { Subcuenta } from '../types/inversionista';
 
 interface Props {
@@ -21,7 +22,8 @@ interface Props {
  * ponderado que ya calculó el backend.
  */
 export default function TarjetaSubcuenta({ subcuenta, onPress }: Props) {
-  const color = COLOR_PERFIL[subcuenta.perfil];
+  const color = useColorPerfil()[subcuenta.perfil];
+  const colores = useColores();
 
   return (
     <TouchableOpacity
@@ -41,7 +43,7 @@ export default function TarjetaSubcuenta({ subcuenta, onPress }: Props) {
           </Text>
         </View>
 
-        <Ionicons name="chevron-forward" size={20} color="#A1A1AA" />
+        <Ionicons name="chevron-forward" size={20} color={colores.textoMuted} />
       </View>
 
       <View className="flex-row flex-wrap items-center gap-2">

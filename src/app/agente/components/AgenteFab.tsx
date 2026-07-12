@@ -2,6 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 
+import { useColores } from '@/context/ThemeContext';
+
 import AgentSheet from './AgentSheet';
 
 /**
@@ -20,6 +22,7 @@ export default function AgenteFab({
   bottom?: number;
 }) {
   const [abierto, setAbierto] = useState(false);
+  const colores = useColores();
 
   return (
     <>
@@ -31,7 +34,7 @@ export default function AgenteFab({
           position: 'absolute',
           right: 20,
           bottom,
-          shadowColor: '#1E3A8A',
+          shadowColor: colores.primario,
           shadowOffset: { width: 0, height: 6 },
           shadowOpacity: 0.3,
           shadowRadius: 12,
@@ -39,7 +42,7 @@ export default function AgenteFab({
         }}
         className="h-14 w-14 items-center justify-center rounded-full bg-brand-primary"
       >
-        <Ionicons name="sparkles" size={24} color="#FFFFFF" />
+        <Ionicons name="sparkles" size={24} color={colores.textoSobrePrimario} />
         {/* Puntito de acento: da la sensación de "vivo". */}
         <View className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full border-2 border-brand-primary bg-brand-accent" />
       </TouchableOpacity>

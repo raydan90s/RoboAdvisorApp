@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,7 +8,7 @@ import { recomendarSimulacion } from '@/app/agente/services/agentApi';
 import type { SimuladorResponse } from '@/app/agente/services/agentApi';
 import { Cargando, ErrorEstado } from '@/components/shared/Estados';
 import Tarjeta from '@/components/shared/Tarjeta';
-import { COLORES } from '@/constants/colores';
+import { useColores } from '@/context/ThemeContext';
 import { ApiError } from '@/services/http';
 import { montoANumero, montoConSeparadores, porcentaje, usd } from '@/utils/formato';
 
@@ -46,6 +45,7 @@ const TIPOS: { etiqueta: string; valor: TasaInstrumento['product_type'] }[] = [
  * desde el backend, y es la MISMA que explica la IA.
  */
 export default function SimuladorPage() {
+  const colores = useColores();
   const navigation = useNavigation();
 
   const [montoTexto, setMontoTexto] = useState('10.000');
@@ -132,7 +132,6 @@ export default function SimuladorPage() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface-canvas">
-      <StatusBar style="dark" />
 
       {/* Header */}
       <View className="flex-row items-center gap-3 border-b border-surface-border bg-surface-background px-4 py-3">
@@ -140,7 +139,7 @@ export default function SimuladorPage() {
           onPress={() => navigation.goBack()}
           className="h-8 w-8 items-center justify-center rounded-xl"
         >
-          <Ionicons name="chevron-back" size={22} color={COLORES.primario} />
+          <Ionicons name="chevron-back" size={22} color={colores.primario} />
         </TouchableOpacity>
         <View className="flex-1">
           <Text className="text-title font-bold text-text-primary">Simulador</Text>
@@ -162,7 +161,7 @@ export default function SimuladorPage() {
             onChangeText={(texto) => setMontoTexto(montoConSeparadores(texto))}
             keyboardType="number-pad"
             placeholder="Ej. 10.000"
-            placeholderTextColor={COLORES.textoMuted}
+            placeholderTextColor={colores.textoMuted}
             className="rounded-xl border border-surface-border bg-surface-secondary px-4 py-3 text-body-md text-text-primary"
           />
           <View className="flex-row flex-wrap gap-2">
@@ -356,6 +355,7 @@ function OpcionDestacada({
   esSeleccion: boolean;
   onQuitarSeleccion: () => void;
 }) {
+  const colores = useColores();
   const bloqueada = tasa.elegible === false || tasa.cumple_monto_minimo === false;
 
   return (
@@ -367,7 +367,7 @@ function OpcionDestacada({
         className={`flex-row items-center gap-2 px-4 py-2.5 ${bloqueada ? 'bg-state-warning' : 'bg-brand-primary'
           }`}
       >
-        <Text className="flex-1 text-caption font-bold tracking-widest text-white">
+        <Text className="flex-1 text-caption font-bold tracking-widest text-text-onPrimary">
           {esSeleccion ? 'TU SELECCIÓN' : 'RECOMENDADA POR EL MOTOR'} ·{' '}
           {tasa.producto.toUpperCase()}
         </Text>
@@ -377,7 +377,9 @@ function OpcionDestacada({
             activeOpacity={0.7}
             accessibilityRole="button"
           >
-            <Text className="text-caption font-bold text-white">Ver la recomendada</Text>
+            <Text className="text-caption font-bold text-text-onPrimary">
+              Ver la recomendada
+            </Text>
           </TouchableOpacity>
         ) : null}
       </View>
@@ -422,7 +424,7 @@ function OpcionDestacada({
         {/* La regla versionada del backend, no una excusa del front. */}
         {tasa.elegible === false && tasa.motivo_no_elegible ? (
           <View className="flex-row gap-2 rounded-xl bg-stateAlpha-warningSoft p-3">
-            <Ionicons name="lock-closed-outline" size={14} color={COLORES.advertencia} />
+            <Ionicons name="lock-closed-outline" size={14} color={colores.advertencia} />
             <Text className="flex-1 text-caption leading-4 text-text-secondary">
               <Text className="font-bold">Tu perfil no admite este emisor. </Text>
               {tasa.motivo_no_elegible}
@@ -432,7 +434,7 @@ function OpcionDestacada({
 
         {tasa.cumple_monto_minimo === false ? (
           <View className="flex-row gap-2 rounded-xl bg-stateAlpha-warningSoft p-3">
-            <Ionicons name="alert-circle-outline" size={14} color={COLORES.advertencia} />
+            <Ionicons name="alert-circle-outline" size={14} color={colores.advertencia} />
             <Text className="flex-1 text-caption leading-4 text-text-secondary">
               <Text className="font-bold">El monto no alcanza. </Text>
               Este producto pide un mínimo de {usd(tasa.monto_minimo)}.
@@ -458,6 +460,7 @@ function FilaSimulada({
   elegida: boolean;
   onPress: () => void;
 }) {
+  const colores = useColores();
   const bloqueada = tasa.elegible === false || tasa.cumple_monto_minimo === false;
   const motivo =
     tasa.elegible === false
@@ -478,7 +481,7 @@ function FilaSimulada({
       <Ionicons
         name={elegida ? 'radio-button-on' : 'radio-button-off'}
         size={18}
-        color={elegida ? COLORES.primario : COLORES.borde}
+        color={elegida ? colores.primario : colores.borde}
       />
 
       <View className={`flex-1 ${bloqueada && !elegida ? 'opacity-60' : ''}`}>

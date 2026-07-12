@@ -1,15 +1,33 @@
 import { Text, View } from 'react-native';
 
+import { useTema } from '@/context/ThemeContext';
 import { usd } from '@/utils/formato';
 
 import type { PerfilRiesgo, Subcuenta } from '../types/inversionista';
 
-/** Un color por perfil de riesgo. El mismo en la barra y en los badges. */
-export const COLOR_PERFIL: Record<PerfilRiesgo, string> = {
-  conservador: '#0891B2',
-  moderado: '#1E3A8A',
-  agresivo: '#D97706',
+/**
+ * Un color por perfil de riesgo. El mismo en la barra y en los badges.
+ *
+ * En oscuro son los mismos tonos subidos de luminosidad: un #1E3A8A sobre el lienzo
+ * oscuro se leería como un hueco negro en la barra, no como un segmento.
+ */
+const PALETA_PERFIL: Record<'light' | 'dark', Record<PerfilRiesgo, string>> = {
+  light: {
+    conservador: '#0891B2',
+    moderado: '#1E3A8A',
+    agresivo: '#D97706',
+  },
+  dark: {
+    conservador: '#38C6DE',
+    moderado: '#5B9BE0',
+    agresivo: '#E0A33C',
+  },
 };
+
+/** El color del perfil en el tema activo. Lo usan la barra y las tarjetas de subcuenta. */
+export function useColorPerfil(): Record<PerfilRiesgo, string> {
+  return PALETA_PERFIL[useTema().tema];
+}
 
 interface Props {
   capitalTotal: number | null;
@@ -53,6 +71,7 @@ export default function BarraCapital({
   sinAsignar,
   subcuentas,
 }: Props) {
+  const colorPerfil = useColorPerfil();
   const hueco = sinAsignar != null && sinAsignar > 0 ? sinAsignar : 0;
   const conMonto = subcuentas.filter((s) => s.monto > 0);
   const vacia = conMonto.length === 0 && hueco === 0;
@@ -80,7 +99,7 @@ export default function BarraCapital({
           {conMonto.map((s) => (
             <View
               key={s.session_id}
-              style={{ flex: s.monto, backgroundColor: COLOR_PERFIL[s.perfil] }}
+              style={{ flex: s.monto, backgroundColor: colorPerfil[s.perfil] }}
             />
           ))}
           {/* El hueco: lo que el cliente tiene declarado y no invertido. */}

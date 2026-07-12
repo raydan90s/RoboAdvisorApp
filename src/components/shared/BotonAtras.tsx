@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { TouchableOpacity } from 'react-native';
 
+import { useColores } from '@/context/ThemeContext';
+
 /**
  * El "Atrás" de todas las cabeceras. Es una flecha, no texto.
  *
@@ -9,6 +11,8 @@ import { TouchableOpacity } from 'react-native';
  * título de al lado.
  */
 export default function BotonAtras({ onPress }: { onPress: () => void }) {
+  const colores = useColores();
+
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -18,7 +22,7 @@ export default function BotonAtras({ onPress }: { onPress: () => void }) {
       hitSlop={8}
       className="-m-1 p-1"
     >
-      <Ionicons name="arrow-back" size={24} color="#1E3A8A" />
+      <Ionicons name="arrow-back" size={24} color={colores.primario} />
     </TouchableOpacity>
   );
 }

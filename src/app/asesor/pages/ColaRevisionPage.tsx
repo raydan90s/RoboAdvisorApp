@@ -1,13 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { StatusBar } from 'expo-status-bar';
 import { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import BotonTema from '@/components/shared/BotonTema';
 import { Cargando, ErrorEstado, Vacio } from '@/components/shared/Estados';
 import { useAuth } from '@/context/AuthContext';
+import { useColores } from '@/context/ThemeContext';
 import { ApiError } from '@/services/http';
 import type { AdvisorStackParamList } from '@/types/navigation';
 import { fechaHora, usd } from '@/utils/formato';
@@ -25,6 +26,7 @@ import type { ColaItem } from '../types/asesor';
 export default function ColaRevisionPage() {
   const navigation = useNavigation<NativeStackNavigationProp<AdvisorStackParamList>>();
   const { user, logout } = useAuth();
+  const colores = useColores();
 
   const [cola, setCola] = useState<ColaItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -53,8 +55,6 @@ export default function ColaRevisionPage() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface-background" edges={['top']}>
-      <StatusBar style="dark" />
-
       <View className="flex-row items-center justify-between border-b border-surface-border px-5 py-4">
         <View className="flex-1 pr-3">
           <Text className="text-heading font-bold text-text-primary">
@@ -62,9 +62,12 @@ export default function ColaRevisionPage() {
           </Text>
           <Text className="text-caption text-text-secondary">{user?.name} · Asesor</Text>
         </View>
-        <TouchableOpacity onPress={logout} activeOpacity={0.85}>
-          <Text className="text-body font-bold text-brand-primary">Salir</Text>
-        </TouchableOpacity>
+        <View className="flex-row items-center gap-3">
+          <BotonTema />
+          <TouchableOpacity onPress={logout} activeOpacity={0.85}>
+            <Text className="text-body font-bold text-brand-primary">Salir</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {error ? (
@@ -110,7 +113,7 @@ export default function ColaRevisionPage() {
                     {fechaHora(item.creada_en)}
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#A1A1AA" />
+                <Ionicons name="chevron-forward" size={20} color={colores.textoMuted} />
               </View>
 
               <View className="flex-row items-center gap-2">

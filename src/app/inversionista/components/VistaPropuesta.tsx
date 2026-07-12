@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -20,13 +19,13 @@ import EstadoBadge from '@/components/shared/EstadoBadge';
 import { Cargando, ErrorEstado } from '@/components/shared/Estados';
 import ExplicacionIA from '@/components/shared/ExplicacionIA';
 import SelectorInstrumento from '@/components/shared/SelectorInstrumento';
-import { COLORES } from '@/constants/colores';
 import { useAuth } from '@/context/AuthContext';
+import { useColores } from '@/context/ThemeContext';
 import { ApiError } from '@/services/http';
 import type { InvestorStackParamList } from '@/types/navigation';
 import { plazo, porcentaje, puntos, usd } from '@/utils/formato';
 
-import DonutPortafolio, { COLORES as COLORES_DONUT } from './DonutPortafolio';
+import DonutPortafolio from './DonutPortafolio';
 import { getTasas } from '../services/catalogApi';
 import { editarAsignacion, getPropuesta } from '../services/investorApi';
 import type { TasaInstrumento } from '../types/catalogo';
@@ -96,18 +95,20 @@ function FilaAccion({
   detalle: string;
   onPress: () => void;
 }) {
+  const colores = useColores();
+
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.85}
       className="flex-row items-center gap-3 rounded-2xl border border-brand-primary bg-surface-background px-5 py-4"
     >
-      <Ionicons name={icono} size={20} color={COLORES.primario} />
+      <Ionicons name={icono} size={20} color={colores.primario} />
       <View className="flex-1">
         <Text className="text-body-md font-bold text-brand-primary">{titulo}</Text>
         <Text className="text-caption text-text-secondary">{detalle}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={20} color={COLORES.primario} />
+      <Ionicons name="chevron-forward" size={20} color={colores.primario} />
     </TouchableOpacity>
   );
 }
@@ -132,6 +133,7 @@ interface Props {
  * pantalla mirando distintas sesiones.
  */
 export default function VistaPropuesta({ sessionId, titulo = 'Tu propuesta' }: Props) {
+  const colores = useColores();
   const navigation =
     useNavigation<NativeStackNavigationProp<InvestorStackParamList>>();
   const { user } = useAuth();
@@ -229,7 +231,6 @@ export default function VistaPropuesta({ sessionId, titulo = 'Tu propuesta' }: P
 
   return (
     <SafeAreaView className="flex-1 bg-surface-background">
-      <StatusBar style="dark" />
 
       <View className="flex-row items-center gap-3 border-b border-surface-border px-5 py-4">
         {navigation.canGoBack() ? <BotonAtras onPress={navigation.goBack} /> : null}
@@ -289,7 +290,7 @@ export default function VistaPropuesta({ sessionId, titulo = 'Tu propuesta' }: P
               activeOpacity={0.7}
               className="flex-row items-center gap-1"
             >
-              <Ionicons name="create-outline" size={16} color={COLORES.primario} />
+              <Ionicons name="create-outline" size={16} color={colores.primario} />
               <Text className="text-body font-bold text-brand-primary">Editar mi mezcla</Text>
             </TouchableOpacity>
           ) : null}
@@ -300,7 +301,7 @@ export default function VistaPropuesta({ sessionId, titulo = 'Tu propuesta' }: P
             <TarjetaProducto
               key={linea.instrumento_code}
               linea={linea}
-              color={COLORES_DONUT[i % COLORES_DONUT.length]}
+              color={colores.grafico[i % colores.grafico.length]}
             />
           ))
         ) : (
@@ -325,7 +326,7 @@ export default function VistaPropuesta({ sessionId, titulo = 'Tu propuesta' }: P
                     }
                     className="h-8 w-8 items-center justify-center rounded-xl bg-stateAlpha-errorSoft"
                   >
-                    <Ionicons name="close" size={18} color={COLORES.error} />
+                    <Ionicons name="close" size={18} color={colores.error} />
                   </TouchableOpacity>
                 </View>
                 <View className="flex-row items-center gap-3">
@@ -368,7 +369,7 @@ export default function VistaPropuesta({ sessionId, titulo = 'Tu propuesta' }: P
               Agregar del catálogo
             </Text>
             {catalogo === null ? (
-              <ActivityIndicator color={COLORES.primario} />
+              <ActivityIndicator color={colores.primario} />
             ) : (
               <SelectorInstrumento
                 tasas={catalogo}
@@ -402,7 +403,7 @@ export default function VistaPropuesta({ sessionId, titulo = 'Tu propuesta' }: P
               }`}
             >
               {guardando ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <ActivityIndicator color={colores.textoSobrePrimario} />
               ) : (
                 <Text
                   className={`text-body-md font-bold ${

@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { StatusBar } from 'expo-status-bar';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -16,8 +15,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AgenteFab from '@/app/agente/components/AgenteFab';
 import DisclaimerBanner from '@/components/shared/DisclaimerBanner';
 import { Cargando, ErrorEstado } from '@/components/shared/Estados';
-import { COLORES } from '@/constants/colores';
 import { useAuth } from '@/context/AuthContext';
+import { useColores } from '@/context/ThemeContext';
 import HomeHeader from '@/screens/inicio/home/components/HomeHeader';
 import { ApiError } from '@/services/http';
 import type { InvestorStackParamList } from '@/types/navigation';
@@ -40,6 +39,7 @@ function EditorCapital({
   capitalActual: number | null;
   onGuardado: (resumen: ResumenCapital) => void;
 }) {
+  const colores = useColores();
   const [abierto, setAbierto] = useState(false);
   const [texto, setTexto] = useState('');
   const [guardando, setGuardando] = useState(false);
@@ -70,7 +70,7 @@ function EditorCapital({
         activeOpacity={0.7}
         className="flex-row items-center gap-2 self-start"
       >
-        <Ionicons name="create-outline" size={16} color="#1E3A8A" />
+        <Ionicons name="create-outline" size={16} color={colores.primario} />
         <Text className="text-body font-bold text-brand-primary">
           {capitalActual == null ? 'Declarar mi capital total' : 'Cambiar capital total'}
         </Text>
@@ -84,7 +84,7 @@ function EditorCapital({
         value={texto}
         onChangeText={(nuevo) => setTexto(montoConSeparadores(nuevo))}
         placeholder="40.000"
-        placeholderTextColor="#A1A1AA"
+        placeholderTextColor={colores.textoMuted}
         keyboardType="numeric"
         inputMode="decimal"
         autoFocus
@@ -103,7 +103,7 @@ function EditorCapital({
           }`}
         >
           {guardando ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color={colores.textoSobrePrimario} />
           ) : (
             <Text
               className={`text-body font-bold ${
@@ -146,13 +146,15 @@ function AccesoHerramienta({
   detalle: string;
   onPress: () => void;
 }) {
+  const colores = useColores();
+
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.85}
       className="flex-1 gap-1 rounded-2xl border border-surface-border bg-surface-background p-4"
     >
-      <Ionicons name={icono} size={20} color={COLORES.primario} />
+      <Ionicons name={icono} size={20} color={colores.primario} />
       <Text className="text-body font-bold text-text-primary">{titulo}</Text>
       <Text className="text-caption leading-4 text-text-muted">{detalle}</Text>
     </TouchableOpacity>
@@ -172,6 +174,7 @@ function AccesoHerramienta({
  * versión de él en el front sería tener dos verdades.
  */
 export default function MisSubcuentasPage({ navigation }: Props) {
+  const colores = useColores();
   const { user, logout } = useAuth();
 
   const [resumen, setResumen] = useState<ResumenCapital | null>(null);
@@ -202,7 +205,6 @@ export default function MisSubcuentasPage({ navigation }: Props) {
 
   return (
     <SafeAreaView className="flex-1 bg-surface-background">
-      <StatusBar style="dark" />
       <HomeHeader
         title={user ? `Hola, ${user.name}` : 'Inicio'}
         subtitle="Tus subcuentas"
@@ -274,7 +276,7 @@ export default function MisSubcuentasPage({ navigation }: Props) {
               activeOpacity={0.85}
               className="flex-row items-center gap-3 rounded-2xl border border-surface-border bg-surface-background p-4"
             >
-              <Ionicons name="logo-whatsapp" size={24} color={COLORES.exito} />
+              <Ionicons name="logo-whatsapp" size={24} color={colores.exito} />
               <View className="flex-1">
                 <Text className="text-body font-bold text-text-primary">
                   Pregúntame por WhatsApp
@@ -283,7 +285,7 @@ export default function MisSubcuentasPage({ navigation }: Props) {
                   Tus inversiones y el catálogo, desde el chat. Vincula tu número.
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color={COLORES.textoMuted} />
+              <Ionicons name="chevron-forward" size={18} color={colores.textoMuted} />
             </TouchableOpacity>
 
             {resumen.subcuentas.length === 0 ? (
@@ -322,7 +324,7 @@ export default function MisSubcuentasPage({ navigation }: Props) {
               activeOpacity={0.85}
               className="flex-row items-center justify-center gap-2 rounded-2xl bg-brand-primary py-4"
             >
-              <Ionicons name="add" size={20} color="#FFFFFF" />
+              <Ionicons name="add" size={20} color={colores.textoSobrePrimario} />
               <Text className="text-body-md font-bold text-text-onPrimary">
                 Nueva subcuenta
               </Text>

@@ -3,7 +3,6 @@ import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { StatusBar } from 'expo-status-bar';
 import { useCallback, useMemo, useState } from 'react';
 import {
   RefreshControl,
@@ -19,6 +18,7 @@ import { Cargando, ErrorEstado, Vacio } from '@/components/shared/Estados';
 import { ApiError } from '@/services/http';
 import type { AdvisorStackParamList, AdvisorTabParamList } from '@/types/navigation';
 import { fechaHora } from '@/utils/formato';
+import { useColores } from '@/context/ThemeContext';
 
 import EventoAuditoriaModal from '../components/EventoAuditoriaModal';
 import { getAuditoria } from '../services/advisorApi';
@@ -146,6 +146,7 @@ type Props = CompositeScreenProps<
  * exactamente lo que una auditoría no puede permitirse.
  */
 export default function AuditoriaPage({ navigation }: Props) {
+  const colores = useColores();
   const [eventos, setEventos] = useState<EventoAuditoria[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refrescando, setRefrescando] = useState(false);
@@ -209,7 +210,6 @@ export default function AuditoriaPage({ navigation }: Props) {
 
   return (
     <SafeAreaView className="flex-1 bg-surface-background" edges={['top']}>
-      <StatusBar style="dark" />
 
       <View className="gap-3 border-b border-surface-border px-5 pb-4 pt-4">
         <View className="gap-1">
@@ -223,12 +223,12 @@ export default function AuditoriaPage({ navigation }: Props) {
         {decisiones.length > 0 ? (
           <>
             <View className="flex-row items-center gap-2 rounded-2xl bg-surface-canvas px-4 py-2.5">
-              <Ionicons name="search" size={16} color="#6B7280" />
+              <Ionicons name="search" size={16} color={colores.textoMuted} />
               <TextInput
                 value={busqueda}
                 onChangeText={setBusqueda}
                 placeholder="Buscar por responsable, entidad o versión"
-                placeholderTextColor="#A1A1AA"
+                placeholderTextColor={colores.textoMuted}
                 autoCorrect={false}
                 className="flex-1 text-body text-text-primary"
               />
@@ -238,7 +238,7 @@ export default function AuditoriaPage({ navigation }: Props) {
                   hitSlop={10}
                   accessibilityLabel="Limpiar la búsqueda"
                 >
-                  <Ionicons name="close-circle" size={16} color="#6B7280" />
+                  <Ionicons name="close-circle" size={16} color={colores.textoMuted} />
                 </TouchableOpacity>
               ) : null}
             </View>
@@ -370,7 +370,7 @@ export default function AuditoriaPage({ navigation }: Props) {
                     </Text>
                   </View>
 
-                  <Ionicons name="chevron-forward" size={18} color="#A1A1AA" />
+                  <Ionicons name="chevron-forward" size={18} color={colores.textoMuted} />
                 </TouchableOpacity>
               );
             })

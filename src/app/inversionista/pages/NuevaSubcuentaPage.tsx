@@ -1,5 +1,4 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -19,6 +18,7 @@ import { Cargando, ErrorEstado } from '@/components/shared/Estados';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/services/http';
 import type { InvestorStackParamList } from '@/types/navigation';
+import { useColores } from '@/context/ThemeContext';
 import {
   montoANumero,
   montoConSeparadores,
@@ -79,6 +79,7 @@ function Cabecera({
  * `CuestionarioPage`).
  */
 export default function NuevaSubcuentaPage({ navigation }: Props) {
+  const colores = useColores();
   const { user } = useAuth();
 
   const [paso, setPaso] = useState<Paso>(1);
@@ -161,7 +162,6 @@ export default function NuevaSubcuentaPage({ navigation }: Props) {
   if (paso === 3) {
     return (
       <SafeAreaView className="flex-1 bg-surface-background">
-        <StatusBar style="dark" />
         <Cabecera paso={3} titulo={nombre.trim()} />
 
         {!propuesta ? (
@@ -233,7 +233,6 @@ export default function NuevaSubcuentaPage({ navigation }: Props) {
   // --- Pasos 1 y 2 ---------------------------------------------------------
   return (
     <SafeAreaView className="flex-1 bg-surface-background">
-      <StatusBar style="dark" />
       <Cabecera
         paso={paso}
         titulo={paso === 1 ? 'Nueva subcuenta' : nombre.trim()}
@@ -264,7 +263,7 @@ export default function NuevaSubcuentaPage({ navigation }: Props) {
                   value={nombre}
                   onChangeText={setNombre}
                   placeholder="Jubilación"
-                  placeholderTextColor="#A1A1AA"
+                  placeholderTextColor={colores.textoMuted}
                   maxLength={60}
                   className="rounded-2xl border border-surface-border bg-surface-elevated px-4 py-4 text-body-md font-bold text-text-primary"
                 />
@@ -278,7 +277,7 @@ export default function NuevaSubcuentaPage({ navigation }: Props) {
                   value={monto}
                   onChangeText={(texto) => setMonto(montoConSeparadores(texto))}
                   placeholder="20.000"
-                  placeholderTextColor="#A1A1AA"
+                  placeholderTextColor={colores.textoMuted}
                   keyboardType="numeric"
                   inputMode="decimal"
                   className="rounded-2xl border border-surface-border bg-surface-elevated px-4 py-4 text-display font-bold text-text-primary"
@@ -350,7 +349,7 @@ export default function NuevaSubcuentaPage({ navigation }: Props) {
                 }`}
               >
                 {enviando ? (
-                  <ActivityIndicator color="#FFFFFF" />
+                  <ActivityIndicator color={colores.textoSobrePrimario} />
                 ) : (
                   <Text
                     className={`text-body-md font-bold ${

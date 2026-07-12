@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -22,7 +21,7 @@ import EstadoBadge from '@/components/shared/EstadoBadge';
 import { Cargando, ErrorEstado } from '@/components/shared/Estados';
 import ExplicacionIA from '@/components/shared/ExplicacionIA';
 import SelectorInstrumento from '@/components/shared/SelectorInstrumento';
-import { COLORES } from '@/constants/colores';
+import { useColores } from '@/context/ThemeContext';
 import { ApiError } from '@/services/http';
 import type { AdvisorStackParamList } from '@/types/navigation';
 import { fechaHora, plazo, porcentaje, usd } from '@/utils/formato';
@@ -61,6 +60,7 @@ const DECISIONES: Record<Decision, string> = {
  * Los USD de una edición los recalcula Postgres. Acá no se multiplica nada.
  */
 export default function DetallePropuestaPage({ navigation, route }: Props) {
+  const colores = useColores();
   const { proposalId } = route.params;
 
   const [detalle, setDetalle] = useState<PropuestaDetalle | null>(null);
@@ -164,7 +164,6 @@ export default function DetallePropuestaPage({ navigation, route }: Props) {
 
   return (
     <SafeAreaView className="flex-1 bg-surface-background">
-      <StatusBar style="dark" />
 
       <View className="flex-row items-center gap-3 border-b border-surface-border px-5 py-4">
         <BotonAtras onPress={navigation.goBack} />
@@ -218,7 +217,7 @@ export default function DetallePropuestaPage({ navigation, route }: Props) {
               <Text className="text-body font-bold text-brand-primary">
                 Ver cómo se calculó su perfil
               </Text>
-              <Ionicons name="chevron-forward" size={18} color="#14375E" />
+              <Ionicons name="chevron-forward" size={18} color={colores.primario} />
             </TouchableOpacity>
           </View>
 
@@ -227,7 +226,7 @@ export default function DetallePropuestaPage({ navigation, route }: Props) {
           {detalle.banderas.length > 0 ? (
             <View className="gap-2 rounded-2xl bg-stateAlpha-warningSoft p-5">
               <View className="flex-row items-center gap-2">
-                <Ionicons name="flag" size={16} color="#C77700" />
+                <Ionicons name="flag" size={16} color={colores.advertencia} />
                 <Text className="text-caption font-bold uppercase text-text-primary">
                   Puntos de atención
                 </Text>
@@ -304,7 +303,7 @@ export default function DetallePropuestaPage({ navigation, route }: Props) {
                       }
                       className="h-8 w-8 items-center justify-center rounded-xl bg-stateAlpha-errorSoft"
                     >
-                      <Ionicons name="close" size={18} color={COLORES.error} />
+                      <Ionicons name="close" size={18} color={colores.error} />
                     </TouchableOpacity>
                   </View>
                   <View className="flex-row items-center gap-3">
@@ -349,7 +348,7 @@ export default function DetallePropuestaPage({ navigation, route }: Props) {
                 Agregar del catálogo
               </Text>
               {catalogo === null ? (
-                <ActivityIndicator color={COLORES.primario} />
+                <ActivityIndicator color={colores.primario} />
               ) : (
                 <SelectorInstrumento
                   tasas={catalogo}
@@ -422,7 +421,7 @@ export default function DetallePropuestaPage({ navigation, route }: Props) {
                 value={comentario}
                 onChangeText={setComentario}
                 placeholder="Comentario (obligatorio si rechazas)"
-                placeholderTextColor="#A1A1AA"
+                placeholderTextColor={colores.textoMuted}
                 multiline
                 className="min-h-20 rounded-2xl border border-surface-border bg-surface-background px-4 py-3 text-body text-text-primary"
               />
@@ -444,7 +443,7 @@ export default function DetallePropuestaPage({ navigation, route }: Props) {
                     }`}
                   >
                     {enviando === 'edited' ? (
-                      <ActivityIndicator color="#FFFFFF" />
+                      <ActivityIndicator color={colores.textoSobrePrimario} />
                     ) : (
                       <Text
                         className={`text-body-md font-bold ${
@@ -475,7 +474,7 @@ export default function DetallePropuestaPage({ navigation, route }: Props) {
                     className="items-center rounded-2xl bg-brand-accent py-4"
                   >
                     {enviando === 'approved' ? (
-                      <ActivityIndicator color="#18181B" />
+                      <ActivityIndicator color={colores.textoSobreAcento} />
                     ) : (
                       <Text className="text-body-md font-bold text-text-onAccent">
                         Aprobar
@@ -503,7 +502,7 @@ export default function DetallePropuestaPage({ navigation, route }: Props) {
                     }`}
                   >
                     {enviando === 'rejected' ? (
-                      <ActivityIndicator color="#FFFFFF" />
+                      <ActivityIndicator color={colores.textoSobrePrimario} />
                     ) : (
                       <Text
                         className={`text-body-md font-bold ${

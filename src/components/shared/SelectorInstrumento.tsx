@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Text, TouchableOpacity, View } from 'react-native';
 
 import type { TasaInstrumento } from '@/app/inversionista/types/catalogo';
-import { COLORES } from '@/constants/colores';
+import { useColores } from '@/context/ThemeContext';
 import { porcentaje } from '@/utils/formato';
 
 interface Props {
@@ -21,6 +21,7 @@ interface Props {
  * guardar: esconder la fila enseñaría menos que mostrarla bloqueada.
  */
 export default function SelectorInstrumento({ tasas, excluir, onAgregar }: Props) {
+  const colores = useColores();
   const disponibles = tasas.filter((t) => !excluir.includes(t.code));
 
   if (disponibles.length === 0) {
@@ -48,7 +49,7 @@ export default function SelectorInstrumento({ tasas, excluir, onAgregar }: Props
             <Ionicons
               name={bloqueada ? 'lock-closed-outline' : 'add-circle-outline'}
               size={22}
-              color={bloqueada ? COLORES.textoMuted : COLORES.primario}
+              color={bloqueada ? colores.textoMuted : colores.primario}
             />
             <View className="flex-1">
               <Text className="text-body font-bold text-text-primary" numberOfLines={1}>

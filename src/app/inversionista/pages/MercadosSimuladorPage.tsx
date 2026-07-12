@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,7 +10,7 @@ import SourceChips from '@/app/agente/components/SourceChips';
 import { Cargando, ErrorEstado } from '@/components/shared/Estados';
 import LineChart from '@/components/shared/LineChart';
 import Tarjeta from '@/components/shared/Tarjeta';
-import { COLORES } from '@/constants/colores';
+import { useColores } from '@/context/ThemeContext';
 import { ApiError } from '@/services/http';
 
 import FeedNoticias from '../components/FeedNoticias';
@@ -51,10 +50,12 @@ function fechaEje(iso: string): string {
 
 /** La respuesta de la Ruta C, con el mismo lenguaje visual ámbar que las burbujas del chat. */
 function TarjetaRecomendacion({ respuesta }: { respuesta: AgentChatResponse }) {
+  const colores = useColores();
+
   return (
     <View className="gap-2 rounded-2xl border border-state-warning bg-stateAlpha-warningSoft p-4">
       <View className="flex-row items-center gap-1.5">
-        <Ionicons name="alert-circle" size={13} color="#C77700" />
+        <Ionicons name="alert-circle" size={13} color={colores.advertencia} />
         <Text className="text-caption font-bold uppercase text-state-warning">
           Simulación educativa · fuera del banco
         </Text>
@@ -66,6 +67,7 @@ function TarjetaRecomendacion({ respuesta }: { respuesta: AgentChatResponse }) {
 }
 
 export default function MercadosSimuladorPage() {
+  const colores = useColores();
   const navigation = useNavigation();
 
   const [activo, setActivo] = useState(ACTIVOS[0].symbol);
@@ -133,14 +135,13 @@ export default function MercadosSimuladorPage() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface-canvas">
-      <StatusBar style="dark" />
 
       <View className="flex-row items-center gap-3 border-b border-surface-border bg-surface-background px-4 py-3">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           className="h-8 w-8 items-center justify-center rounded-xl"
         >
-          <Ionicons name="chevron-back" size={22} color={COLORES.primario} />
+          <Ionicons name="chevron-back" size={22} color={colores.primario} />
         </TouchableOpacity>
         <View className="flex-1">
           <Text className="text-title font-bold text-text-primary">Mercados globales</Text>
@@ -155,7 +156,7 @@ export default function MercadosSimuladorPage() {
             bancaria), este es el de la simulación de mercados externos — texto distinto
             a propósito, y sin botón de cerrar por la misma razón que el otro. */}
         <View className="flex-row gap-3 rounded-2xl bg-stateAlpha-warningSoft p-4">
-          <Ionicons name="warning" size={20} color="#C77700" />
+          <Ionicons name="warning" size={20} color={colores.advertencia} />
           <Text className="flex-1 text-caption leading-4 text-text-primary">
             <Text className="font-bold">Simulación educativa.</Text> Estos activos
             globales no forman parte del catálogo institucional ni son ejecutables.
@@ -205,11 +206,11 @@ export default function MercadosSimuladorPage() {
                     <Ionicons
                       name={sube ? 'caret-up' : 'caret-down'}
                       size={14}
-                      color={sube ? COLORES.exito : COLORES.error}
+                      color={sube ? colores.exito : colores.error}
                     />
                     <Text
                       className="text-body-md font-bold"
-                      style={{ color: sube ? COLORES.exito : baja ? COLORES.error : COLORES.textoMuted }}
+                      style={{ color: sube ? colores.exito : baja ? colores.error : colores.textoMuted }}
                     >
                       {Math.abs(cotizacion.change_percent).toFixed(2)}%
                     </Text>
@@ -223,7 +224,7 @@ export default function MercadosSimuladorPage() {
                     label: fechaEje(p.date),
                     value: p.close,
                   }))}
-                  color={COLORES.primario}
+                  color={colores.primario}
                   formatValue={formatearPrecio}
                 />
               ) : null}
@@ -251,10 +252,10 @@ export default function MercadosSimuladorPage() {
               }`}
             >
               {cargandoIA ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <ActivityIndicator color={colores.textoSobrePrimario} />
               ) : (
                 <>
-                  <Ionicons name="sparkles" size={16} color="#FFFFFF" />
+                  <Ionicons name="sparkles" size={16} color={colores.textoSobrePrimario} />
                   <Text className="text-body-md font-bold text-text-onPrimary">
                     Recomendación de Mercados (IA)
                   </Text>

@@ -2,6 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Linking, Text, TouchableOpacity, View } from 'react-native';
 
+import { useColores } from '@/context/ThemeContext';
+
 import type { SourceChip } from '../services/agentApi';
 
 /**
@@ -34,6 +36,7 @@ const esNoticia = (table: string) => table === 'gnews';
 
 export default function SourceChips({ sources }: { sources: SourceChip[] }) {
   const [abierto, setAbierto] = useState<string | null>(null);
+  const colores = useColores();
 
   if (!sources.length) return null;
 
@@ -72,7 +75,7 @@ export default function SourceChips({ sources }: { sources: SourceChip[] }) {
                   noticia ? 'open-outline' : externa ? 'trending-up-outline' : 'document-text-outline'
                 }
                 size={11}
-                color={externa ? '#C77700' : '#1E3A8A'}
+                color={externa ? colores.advertencia : colores.primario}
               />
               <Text
                 className={`text-caption font-semibold ${externa ? 'text-state-warning' : 'text-brand-primary'}`}
@@ -93,7 +96,11 @@ export default function SourceChips({ sources }: { sources: SourceChip[] }) {
                 className="gap-1 rounded-xl border border-surface-border bg-surface-elevated p-3"
               >
                 <View className="flex-row items-center gap-1.5">
-                  <Ionicons name="shield-checkmark-outline" size={13} color="#84CC16" />
+                  <Ionicons
+                    name="shield-checkmark-outline"
+                    size={13}
+                    color={colores.exito}
+                  />
                   <Text className="text-caption font-bold uppercase text-text-secondary">
                     {FUENTE[s.table] ?? 'Dato verificado'}
                   </Text>
