@@ -5,8 +5,8 @@ import { ActivityIndicator, Image, Linking, Text, TouchableOpacity, View } from 
 import { useColores } from '@/context/ThemeContext';
 import { ApiError } from '@/services/http';
 
-import { getFeed } from '../services/feedApi';
-import type { FeedResponse, NoticiaFeed, TemaFeed } from '../services/feedApi';
+import { getFeed } from '@/app/inversionista/services/feedApi';
+import type { FeedResponse, NoticiaFeed, TemaFeed } from '@/app/inversionista/services/feedApi';
 
 const TEMAS: { id: TemaFeed; etiqueta: string; icono: keyof typeof Ionicons.glyphMap }[] = [
   { id: 'mercados', etiqueta: 'Mercados', icono: 'stats-chart' },

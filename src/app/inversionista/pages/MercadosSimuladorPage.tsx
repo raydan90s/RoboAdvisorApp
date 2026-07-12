@@ -13,9 +13,8 @@ import Tarjeta from '@/components/shared/Tarjeta';
 import { useColores } from '@/context/ThemeContext';
 import { ApiError } from '@/services/http';
 
-import FeedNoticias from '../components/FeedNoticias';
-import { getCotizaciones, getHistorico } from '../services/marketApi';
-import type { HistoricalSeries, MarketQuote } from '../services/marketApi';
+import { getCotizaciones, getHistorico } from '@/app/inversionista/services/marketApi';
+import type { HistoricalSeries, MarketQuote } from '@/app/inversionista/services/marketApi';
 
 /**
  * Simulador de mercados GLOBALES — deliberadamente separado del simulador bancario
@@ -271,9 +270,6 @@ export default function MercadosSimuladorPage() {
           </>
         )}
 
-        {/* El feed de noticias (sugerencia del jurado): se carga aparte del ticker,
-            así una cosa no bloquea a la otra. */}
-        <FeedNoticias />
       </ScrollView>
     </SafeAreaView>
   );
