@@ -6,6 +6,7 @@ import { useCallback, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import AgenteFab from '@/app/agente/components/AgenteFab';
 import DisclaimerBanner from '@/components/shared/DisclaimerBanner';
 import { Cargando, ErrorEstado } from '@/components/shared/Estados';
 import { useAuth } from '@/context/AuthContext';
@@ -155,6 +156,9 @@ export default function InicioPage({ navigation }: Props) {
           <DisclaimerBanner />
         </ScrollView>
       )}
+
+      {/* Ya perfilado → el asistente está disponible sobre el inicio. */}
+      {!cargando && !error && perfil ? <AgenteFab /> : null}
     </SafeAreaView>
   );
 }

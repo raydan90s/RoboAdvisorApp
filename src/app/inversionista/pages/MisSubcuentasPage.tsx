@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import AgenteFab from '@/app/agente/components/AgenteFab';
 import DisclaimerBanner from '@/components/shared/DisclaimerBanner';
 import { Cargando, ErrorEstado } from '@/components/shared/Estados';
 import { COLORES } from '@/constants/colores';
@@ -20,7 +21,7 @@ import { useAuth } from '@/context/AuthContext';
 import HomeHeader from '@/screens/inicio/home/components/HomeHeader';
 import { ApiError } from '@/services/http';
 import type { InvestorStackParamList } from '@/types/navigation';
-import { montoANumero } from '@/utils/formato';
+import { montoANumero, montoConSeparadores } from '@/utils/formato';
 
 import BarraCapital from '../components/BarraCapital';
 import TarjetaSubcuenta from '../components/TarjetaSubcuenta';
@@ -80,7 +81,7 @@ function EditorCapital({
     <View className="gap-2">
       <TextInput
         value={texto}
-        onChangeText={setTexto}
+        onChangeText={(nuevo) => setTexto(montoConSeparadores(nuevo))}
         placeholder="40.000"
         placeholderTextColor="#A1A1AA"
         keyboardType="numeric"
@@ -288,6 +289,10 @@ export default function MisSubcuentasPage({ navigation }: Props) {
               </Text>
             </TouchableOpacity>
           </View>
+
+          {/* El asistente, elevado sobre la barra sticky. Sin sessionId conoce el
+              capital y todas las subcuentas para responder del panorama completo. */}
+          <AgenteFab bottom={96} />
         </>
       ) : null}
     </SafeAreaView>

@@ -18,6 +18,7 @@ import Calificacion from '@/components/shared/Calificacion';
 import DisclaimerBanner from '@/components/shared/DisclaimerBanner';
 import EstadoBadge from '@/components/shared/EstadoBadge';
 import { Cargando, ErrorEstado } from '@/components/shared/Estados';
+import ExplicacionIA from '@/components/shared/ExplicacionIA';
 import SelectorInstrumento from '@/components/shared/SelectorInstrumento';
 import { COLORES } from '@/constants/colores';
 import { useAuth } from '@/context/AuthContext';
@@ -273,20 +274,9 @@ export default function VistaPropuesta({ sessionId, titulo = 'Tu propuesta' }: P
         </View>
 
         {/* El único texto del LLM en toda la pantalla; los números que cita salieron del
-            prompt, ya calculados, y el guardarraíl verificó que no inventara otros. */}
-        {propuesta.explicacion ? (
-          <View className="gap-2 rounded-2xl bg-brandAlpha-primarySoft p-5">
-            <View className="flex-row items-center gap-2">
-              <Ionicons name="sparkles" size={16} color="#1E3A8A" />
-              <Text className="text-caption font-bold uppercase text-brand-primary">
-                Por qué esta propuesta
-              </Text>
-            </View>
-            <Text className="text-body leading-5 text-text-primary">
-              {propuesta.explicacion}
-            </Text>
-          </View>
-        ) : null}
+            prompt, ya calculados, y el guardarraíl verificó que no inventara otros. Llega
+            como un párrafo largo: `ExplicacionIA` lo abre en resumen + detalle. */}
+        {propuesta.explicacion ? <ExplicacionIA texto={propuesta.explicacion} /> : null}
 
         <View className="mt-2 flex-row items-center justify-between">
           <Text className="text-caption font-bold uppercase text-text-secondary">

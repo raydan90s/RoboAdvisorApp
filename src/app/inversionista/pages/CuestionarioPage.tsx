@@ -17,7 +17,7 @@ import BotonAtras from '@/components/shared/BotonAtras';
 import { Cargando, ErrorEstado } from '@/components/shared/Estados';
 import { ApiError } from '@/services/http';
 import type { InvestorStackParamList } from '@/types/navigation';
-import { montoANumero } from '@/utils/formato';
+import { montoANumero, montoConSeparadores } from '@/utils/formato';
 
 import FormularioPreguntas from '../components/FormularioPreguntas';
 import { crearPerfil, getPreguntas } from '../services/investorApi';
@@ -128,7 +128,7 @@ export default function CuestionarioPage({ navigation }: Props) {
             </Text>
             <TextInput
               value={monto}
-              onChangeText={setMonto}
+              onChangeText={(texto) => setMonto(montoConSeparadores(texto))}
               placeholder="20.000"
               placeholderTextColor="#A1A1AA"
               keyboardType="numeric"

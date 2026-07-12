@@ -19,7 +19,13 @@ import { Cargando, ErrorEstado } from '@/components/shared/Estados';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/services/http';
 import type { InvestorStackParamList } from '@/types/navigation';
-import { montoANumero, porcentaje, puntos, usd } from '@/utils/formato';
+import {
+  montoANumero,
+  montoConSeparadores,
+  porcentaje,
+  puntos,
+  usd,
+} from '@/utils/formato';
 
 import DonutPortafolio from '../components/DonutPortafolio';
 import FormularioPreguntas from '../components/FormularioPreguntas';
@@ -270,7 +276,7 @@ export default function NuevaSubcuentaPage({ navigation }: Props) {
                 </Text>
                 <TextInput
                   value={monto}
-                  onChangeText={setMonto}
+                  onChangeText={(texto) => setMonto(montoConSeparadores(texto))}
                   placeholder="20.000"
                   placeholderTextColor="#A1A1AA"
                   keyboardType="numeric"

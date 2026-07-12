@@ -1,0 +1,232 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { ApiError } from '@/services/http';
+
+import { enviarMensaje, getProviders, type ProviderInfo } from '../services/agentApi';
+import Burbuja, { type Mensaje } from './Burbuja';
+import ProviderSelector from './ProviderSelector';
+
+interface Props {
+  visible: boolean;
+  onClose: () => void;
+  /** Subcuenta sobre la que se conversa. Sin ella, el backend usa la más reciente. */
+  sessionId?: string;
+}
+
+// Preguntas de arranque: bajan la fricción y guían la demo hacia lo que el agente
+// hace bien (explicar el perfil y la propuesta con fuentes).
+const SUGERENCIAS = [
+  '¿Cómo se calculó mi perfil?',
+  '¿Por qué esta distribución?',
+  '¿Qué riesgo tiene mi cartera?',
+];
+
+const saludo = (): Mensaje => ({
+  id: 'saludo',
+  role: 'assistant',
+  texto:
+    'Hola 👋 Soy tu asistente. Puedo explicarte tu perfil de riesgo y tu propuesta ' +
+    'de inversión, y mostrarte de dónde sale cada dato. ¿Qué te gustaría saber?',
+});
+
+let contador = 0;
+const nuevoId = () => `m${++contador}`;
+
+export default function AgentSheet({ visible, onClose, sessionId }: Props) {
+  const [mensajes, setMensajes] = useState<Mensaje[]>([saludo()]);
+  const [input, setInput] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const [providers, setProviders] = useState<ProviderInfo[]>([]);
+  const [proveedor, setProveedor] = useState<string | null>(null);
+  const scrollRef = useRef<ScrollView>(null);
+
+  // Baja el scroll al último mensaje cada vez que llega uno.
+  useEffect(() => {
+    const t = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
+    return () => clearTimeout(t);
+  }, [mensajes]);
+
+  // Re-consulta el catálogo (refleja cambios del .env sin reiniciar). Si el proveedor
+  // elegido dejó de tener key, salta a uno disponible: nunca se queda uno inválido.
+  const cargarProviders = useCallback(() => {
+    getProviders()
+      .then((lista) => {
+        setProviders(lista);
+        setProveedor((actual) => {
+          if (actual && lista.some((p) => p.id === actual && p.disponible)) return actual;
+          const def =
+            lista.find((p) => p.es_default && p.disponible) ?? lista.find((p) => p.disponible);
+          return def?.id ?? null;
+        });
+      })
+      .catch(() => {
+        /* si falla, el selector no aparece y se usa el default del .env */
+      });
+  }, []);
+
+  // Al abrir el widget: catálogo fresco.
+  useEffect(() => {
+    if (visible) cargarProviders();
+  }, [visible, cargarProviders]);
+
+  const soloSaludo = mensajes.length === 1;
+
+  async function enviar(texto: string) {
+    const t = texto.trim();
+    if (!t || enviando) return;
+
+    const pendingId = nuevoId();
+    setMensajes((m) => [
+      ...m,
+      { id: nuevoId(), role: 'user', texto: t },
+      { id: pendingId, role: 'assistant', texto: '', pending: true },
+    ]);
+    setInput('');
+    setEnviando(true);
+
+    try {
+      const r = await enviarMensaje(t, sessionId, proveedor ?? undefined);
+      setMensajes((m) =>
+        m.map((msg) =>
+          msg.id === pendingId
+            ? {
+                id: pendingId,
+                role: 'assistant',
+                texto: r.texto,
+                sources: r.sources,
+                modelo: r.modelo,
+              }
+            : msg,
+        ),
+      );
+    } catch (e) {
+      const texto =
+        e instanceof ApiError ? e.message : 'No pude responder ahora. Intenta de nuevo.';
+      setMensajes((m) =>
+        m.map((msg) =>
+          msg.id === pendingId
+            ? { id: pendingId, role: 'assistant', texto, error: true }
+            : msg,
+        ),
+      );
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View className="flex-1 justify-end">
+        <Pressable
+          onPress={onClose}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)' }}
+        />
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ height: '88%' }}
+        >
+          <SafeAreaView
+            edges={['bottom']}
+            className="flex-1 overflow-hidden rounded-t-3xl bg-surface-background"
+          >
+            {/* Handle + header */}
+            <View className="items-center pt-2.5">
+              <View className="h-1 w-10 rounded-full bg-surface-divider" />
+            </View>
+            <View className="flex-row items-center justify-between border-b border-surface-border px-4 py-3">
+              <View className="flex-1 flex-row items-center gap-3">
+                <View className="h-10 w-10 items-center justify-center rounded-2xl bg-brandAlpha-primarySoft">
+                  <Ionicons name="sparkles" size={18} color="#1E3A8A" />
+                </View>
+                <Text className="text-body-md font-bold text-text-primary">Asistente</Text>
+              </View>
+
+              {/* Selector de modelo (tiempo real) + cerrar */}
+              <View className="flex-row items-center gap-2">
+                <ProviderSelector
+                  providers={providers}
+                  value={proveedor}
+                  onChange={setProveedor}
+                  onOpen={cargarProviders}
+                />
+                <TouchableOpacity
+                  onPress={onClose}
+                  activeOpacity={0.7}
+                  className="h-8 w-8 items-center justify-center rounded-xl bg-surface-secondary"
+                >
+                  <Ionicons name="close" size={18} color="#71717A" />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Mensajes */}
+            <ScrollView
+              ref={scrollRef}
+              className="flex-1 bg-surface-canvas"
+              contentContainerClassName="px-4 py-4"
+              keyboardShouldPersistTaps="handled"
+            >
+              {mensajes.map((m) => (
+                <Burbuja key={m.id} mensaje={m} />
+              ))}
+
+              {soloSaludo ? (
+                <View className="mt-1 gap-2">
+                  {SUGERENCIAS.map((s) => (
+                    <TouchableOpacity
+                      key={s}
+                      activeOpacity={0.7}
+                      onPress={() => enviar(s)}
+                      className="flex-row items-center gap-2 self-start rounded-full border border-brandAlpha-primaryMedium bg-surface-background px-3.5 py-2"
+                    >
+                      <Ionicons name="chatbubble-ellipses-outline" size={13} color="#1E3A8A" />
+                      <Text className="text-body text-brand-primary">{s}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ) : null}
+            </ScrollView>
+
+            {/* Barra de entrada */}
+            <View className="flex-row items-end gap-2 border-t border-surface-border bg-surface-background px-4 py-3">
+              <TextInput
+                value={input}
+                onChangeText={setInput}
+                placeholder="Pregunta sobre tu propuesta…"
+                placeholderTextColor="#A1A1AA"
+                multiline
+                onSubmitEditing={() => enviar(input)}
+                blurOnSubmit={false}
+                className="max-h-24 flex-1 rounded-2xl bg-surface-secondary px-4 py-2.5 text-body text-text-primary"
+              />
+              <TouchableOpacity
+                onPress={() => enviar(input)}
+                disabled={!input.trim() || enviando}
+                activeOpacity={0.8}
+                className={`h-11 w-11 items-center justify-center rounded-2xl ${
+                  !input.trim() || enviando ? 'bg-surface-divider' : 'bg-brand-primary'
+                }`}
+              >
+                <Ionicons name="arrow-up" size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+          </SafeAreaView>
+        </KeyboardAvoidingView>
+      </View>
+    </Modal>
+  );
+}

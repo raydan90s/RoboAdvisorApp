@@ -20,6 +20,7 @@ import BotonAtras from '@/components/shared/BotonAtras';
 import Calificacion from '@/components/shared/Calificacion';
 import EstadoBadge from '@/components/shared/EstadoBadge';
 import { Cargando, ErrorEstado } from '@/components/shared/Estados';
+import ExplicacionIA from '@/components/shared/ExplicacionIA';
 import SelectorInstrumento from '@/components/shared/SelectorInstrumento';
 import { COLORES } from '@/constants/colores';
 import { ApiError } from '@/services/http';
@@ -370,19 +371,15 @@ export default function DetallePropuestaPage({ navigation, route }: Props) {
           ) : null}
 
           {/* El texto del LLM, marcado como tal: el asesor tiene que saber qué leyó su
-              cliente y quién lo escribió. */}
+              cliente y quién lo escribió. Se muestra resumido, pero al expandir aparece
+              íntegro —disclaimer incluido—: acá no se audita un resumen nuestro, se audita
+              el texto que el cliente tuvo delante. */}
           {detalle.explicacion ? (
-            <View className="gap-2 rounded-2xl bg-brandAlpha-primarySoft p-5">
-              <View className="flex-row items-center gap-2">
-                <Ionicons name="sparkles" size={16} color="#14375E" />
-                <Text className="text-caption font-bold uppercase text-brand-primary">
-                  Explicación que vio el cliente
-                </Text>
-              </View>
-              <Text className="text-body leading-5 text-text-primary">
-                {detalle.explicacion}
-              </Text>
-            </View>
+            <ExplicacionIA
+              texto={detalle.explicacion}
+              titulo="Explicación que vio el cliente"
+              conservarDisclaimer
+            />
           ) : null}
 
           {/* Historial: fecha · versión de reglas · responsable. El criterio de la HU3. */}
