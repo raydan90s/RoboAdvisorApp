@@ -11,6 +11,7 @@ import ComoSeCalculoPage from '@/app/inversionista/pages/ComoSeCalculoPage';
 import ComparadorPage from '@/app/inversionista/pages/ComparadorPage';
 import CuestionarioPage from '@/app/inversionista/pages/CuestionarioPage';
 import InicioPage from '@/app/inversionista/pages/InicioPage';
+import MercadosSimuladorPage from '@/app/inversionista/pages/MercadosSimuladorPage';
 import MisSubcuentasPage from '@/app/inversionista/pages/MisSubcuentasPage';
 import NuevaSubcuentaPage from '@/app/inversionista/pages/NuevaSubcuentaPage';
 import PropuestaPage from '@/app/inversionista/pages/PropuestaPage';
@@ -63,6 +64,7 @@ function InvestorStack() {
       <Investor.Screen name="ComoSeCalculo" component={ComoSeCalculoPage} />
       <Investor.Screen name="Comparador" component={ComparadorPage} />
       <Investor.Screen name="Simulador" component={SimuladorPage} />
+      <Investor.Screen name="Mercados" component={MercadosSimuladorPage} />
       <Investor.Screen name="VincularWhatsApp" component={VincularWhatsAppPage} />
     </Investor.Navigator>
   );

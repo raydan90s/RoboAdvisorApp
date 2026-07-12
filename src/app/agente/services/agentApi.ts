@@ -23,6 +23,14 @@ export interface AgentChatResponse {
   /** El modelo de Gemini, la plantilla determinista o el rechazo por alcance. */
   modelo: string;
   en_alcance: boolean;
+  /**
+   * La ruta que tomó el router del backend:
+   * "bancario" (solo datos del banco) | "mixto" (banco + Alpha Vantage) |
+   * "externo" (100% Alpha Vantage) | "rechazo" (fuera de alcance).
+   * "mixto"/"externo" son instrumentos simulados, fuera del catálogo del banco —
+   * la burbuja los pinta distinto (ver `Burbuja.tsx`).
+   */
+  ruta: 'bancario' | 'mixto' | 'externo' | 'rechazo';
 }
 
 export interface AgentChatRequest {
@@ -31,6 +39,13 @@ export interface AgentChatRequest {
   mensaje: string;
   /** Proveedor de IA elegido en el header ("google"|"openai"|"anthropic"). */
   provider?: string;
+  /**
+   * Señal explícita del botón "Recomendación de Mercados (IA)": fuerza la Ruta C
+   * (100% Alpha Vantage, cero contexto del banco) para estos símbolos exactos, sin
+   * depender de que `mensaje` contenga las palabras que el router del backend
+   * reconoce.
+   */
+  symbols?: string[];
 }
 
 /** Un proveedor del catálogo. El backend NUNCA manda las API keys, solo si existen. */
@@ -41,15 +56,21 @@ export interface ProviderInfo {
   es_default: boolean;
 }
 
-/** Un turno de conversación. `provider` cambia el modelo en tiempo real. */
+/**
+ * Un turno de conversación. `provider` cambia el modelo en tiempo real; `symbols`
+ * fuerza la Ruta C (ver `AgentChatRequest.symbols`) — la usa el botón de
+ * recomendación del simulador de mercados, no el chat normal.
+ */
 export function enviarMensaje(
   mensaje: string,
   sessionId?: string,
   provider?: string,
+  symbols?: string[],
 ): Promise<AgentChatResponse> {
   const body: AgentChatRequest = { mensaje };
   if (sessionId) body.session_id = sessionId;
   if (provider) body.provider = provider;
+  if (symbols?.length) body.symbols = symbols;
   return http.post<AgentChatResponse>('/api/agent/chat', body);
 }
 

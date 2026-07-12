@@ -24,6 +24,7 @@ import type { InvestorStackParamList } from '@/types/navigation';
 import { montoANumero, montoConSeparadores } from '@/utils/formato';
 
 import BarraCapital from '../components/BarraCapital';
+import MarketTicker from '../components/MarketTicker';
 import TarjetaSubcuenta from '../components/TarjetaSubcuenta';
 import { fijarCapital, getSubcuentas } from '../services/investorApi';
 import type { ResumenCapital } from '../types/inversionista';
@@ -219,6 +220,12 @@ export default function MisSubcuentasPage({ navigation }: Props) {
             className="flex-1 bg-surface-canvas"
             contentContainerClassName="px-5 py-6 gap-4"
           >
+            {/* -mx-5 cancela el padding del ScrollView: el ticker desliza de borde
+                a borde de la pantalla, a diferencia de las demás secciones. */}
+            <View className="-mx-5">
+              <MarketTicker />
+            </View>
+
             <View className="gap-4 rounded-2xl border border-surface-border bg-surface-background p-5">
               <BarraCapital
                 capitalTotal={resumen.capital_total}
@@ -244,6 +251,19 @@ export default function MisSubcuentasPage({ navigation }: Props) {
                 titulo="Simulador"
                 detalle="Cuánto rendiría un monto a un plazo."
                 onPress={() => navigation.navigate('Simulador')}
+              />
+            </View>
+
+            {/* Mercados EXTERNOS (Alpha Vantage): fuera de la fila de arriba a propósito
+                — no es catálogo del banco, es una simulación educativa aparte. Su
+                propia fila (`flex-row`): `AccesoHerramienta` usa `flex-1`, que solo
+                tiene sentido con hermanos en una fila horizontal. */}
+            <View className="flex-row">
+              <AccesoHerramienta
+                icono="trending-up-outline"
+                titulo="Mercados globales"
+                detalle="Bitcoin, S&P 500, EUR/USD, oro — cotización, gráfico y análisis de IA."
+                onPress={() => navigation.navigate('Mercados')}
               />
             </View>
 
