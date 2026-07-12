@@ -61,6 +61,27 @@ export function editarAsignacion(
   );
 }
 
+/**
+ * El cliente corrige las respuestas de un perfilamiento que ya hizo.
+ *
+ * El servidor vuelve a puntuar contra las reglas activas, regenera la propuesta con la
+ * plantilla del perfil nuevo y la deja en `pending_review`: reaparece en la cola del
+ * asesor. Por eso se permite incluso si ya la había decidido —esa decisión se tomó con
+ * un insumo que el cliente acaba de corregir— y por eso la decisión previa no se borra:
+ * queda en el historial de la propuesta.
+ *
+ * Responde con el desglose ya recalculado: el mismo que pinta esta pantalla.
+ */
+export function editarPerfil(
+  sessionId: string,
+  respuestas: Record<string, string>,
+): Promise<ProfilingBreakdown> {
+  return http.put<ProfilingBreakdown>(
+    `/api/investor/sessions/${encodeURIComponent(sessionId)}/profile`,
+    { respuestas },
+  );
+}
+
 export function getBreakdown(
   investorId: string,
   sessionId?: string,
