@@ -43,6 +43,9 @@ export type InvestorStackParamList = {
   /** Con `monto` (p. ej. desde una propuesta) las tasas llegan con interés calculado. */
   Comparador: { monto?: number } | undefined;
   Simulador: undefined;
+
+  /** Vincular el WhatsApp del cliente con su cuenta (código de un solo uso). */
+  VincularWhatsApp: undefined;
 };
 
 /** Las dos listas del asesor: independientes entre sí, por eso son tabs. */
