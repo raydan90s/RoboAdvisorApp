@@ -15,6 +15,7 @@ const META: Record<string, { label: string; color: string }> = {
   google: { label: 'Gemini', color: '#4285F4' },
   openai: { label: 'OpenAI', color: '#10A37F' },
   anthropic: { label: 'Claude', color: '#D97757' },
+  deepseek: { label: 'DeepSeek', color: '#4D6BFE' },
 };
 
 const meta = (id: string) => META[id] ?? { label: id, color: '#71717A' };
