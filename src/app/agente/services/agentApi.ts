@@ -86,6 +86,14 @@ export interface SimuladorRequest {
   plazo_dias?: number;
   /** El producto que el usuario eligió al cambiar de banco o de fondo. */
   seleccion_code?: string;
+  /**
+   * Las opciones que la IA tiene derecho a ver: **exactamente las que el usuario está
+   * viendo**. Es el mismo flag de `getTasas`, y cada pantalla manda el que usó para
+   * pintar su lista: el simulador `true` (el plazo es horizonte, y el usuario puede
+   * cambiarse a un depósito de otro plazo) y el comparador `false` (el plazo es filtro).
+   * Si no coincidieran, la IA recomendaría una fila que no está en la lista.
+   */
+  todos_los_plazos?: boolean;
   provider?: string;
 }
 

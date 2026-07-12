@@ -11,28 +11,33 @@ interface Props {
   error: string | null;
   /** Deshabilitado mientras no haya un monto válido que simular. */
   habilitado: boolean;
+  /** Qué le falta al usuario para poder pedirla. Solo se ve con `habilitado` en false. */
+  pista?: string;
   onPedir: () => void;
 }
 
 /**
- * La recomendación de IA del simulador.
+ * La recomendación de IA sobre el catálogo. La comparten el simulador y el comparador:
+ * las dos pantallas muestran las mismas filas de `/api/catalog/rates`, así que el consejo
+ * que las explica es literalmente el mismo componente y el mismo endpoint.
  *
- * El reparto de trabajo es el mismo de siempre y acá se ve literal: **el motor elige y la
- * IA explica**. La opción recomendada la marca el backend (`recomendado` en la fila del
- * catálogo) y es la que la tarjeta de arriba destaca; este texto solo la pone en palabras
- * y, si el usuario se cambió a otro banco o a otro fondo, dice qué gana y qué cede.
+ * El reparto de trabajo es el de siempre y acá se ve literal: **el motor elige y la IA
+ * explica**. La opción recomendada la marca el backend (`recomendado` en la fila del
+ * catálogo) y es la que la pantalla destaca; este texto solo la pone en palabras y, si el
+ * usuario se cambió a otro banco o a otro fondo, dice qué gana y qué cede.
  *
  * No se pide sola: es un botón. Una llamada al LLM por cada tecla del monto sería cara y,
- * peor, dejaría en pantalla un consejo que habla de cifras que ya cambiaron. Por eso el
- * texto se borra en cuanto el usuario mueve el monto, el plazo o la selección: una
+ * peor, dejaría en pantalla un consejo que habla de cifras que ya cambiaron. Por eso quien
+ * lo usa borra el texto en cuanto el usuario mueve el monto, el plazo o la selección: una
  * recomendación vieja al lado de números nuevos es la forma más fácil de mentir sin
  * inventar nada.
  */
-export default function RecomendacionSimulador({
+export default function RecomendacionIA({
   recomendacion,
   cargando,
   error,
   habilitado,
+  pista,
   onPedir,
 }: Props) {
   if (cargando) {
@@ -55,9 +60,11 @@ export default function RecomendacionSimulador({
             Recomendación con IA
           </Text>
         </View>
+        {/* "las opciones de abajo", no "todo el catálogo": el comparador filtra por plazo
+            y la IA solo ve lo filtrado. La frase tiene que ser cierta en las dos pantallas. */}
         <Text className="text-body leading-5 text-text-secondary">
-          El asistente compara todas las opciones del catálogo con tu monto y tu perfil, y
-          te explica cuál conviene y por qué.
+          El asistente compara las opciones de abajo con tu monto y tu perfil, y te explica
+          cuál conviene y por qué.
         </Text>
 
         {error ? (
@@ -88,6 +95,11 @@ export default function RecomendacionSimulador({
             {error ? 'Reintentar' : 'Recomiéndame una opción'}
           </Text>
         </TouchableOpacity>
+
+        {/* Un botón gris sin explicación es un callejón sin salida: se dice qué falta. */}
+        {!habilitado && pista ? (
+          <Text className="text-center text-caption text-text-muted">{pista}</Text>
+        ) : null}
       </View>
     );
   }

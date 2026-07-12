@@ -13,7 +13,7 @@ import { COLORES } from '@/constants/colores';
 import { ApiError } from '@/services/http';
 import { montoANumero, montoConSeparadores, porcentaje, usd } from '@/utils/formato';
 
-import RecomendacionSimulador from '../components/RecomendacionSimulador';
+import RecomendacionIA from '../components/RecomendacionIA';
 import { getTasas } from '../services/catalogApi';
 import type { CatalogoTasas, TasaInstrumento } from '../types/catalogo';
 
@@ -112,6 +112,9 @@ export default function SimuladorPage() {
         await recomendarSimulacion({
           monto,
           plazo_dias: plazo,
+          // El mismo flag con el que se pidieron las filas de arriba: la IA ve las que
+          // el usuario está viendo, ni una más.
+          todos_los_plazos: true,
           ...(seleccion ? { seleccion_code: seleccion } : {}),
         }),
       );
@@ -233,7 +236,7 @@ export default function SimuladorPage() {
               </Tarjeta>
             )}
 
-            <RecomendacionSimulador
+            <RecomendacionIA
               recomendacion={recomendacion}
               cargando={cargandoIA}
               error={errorIA}
