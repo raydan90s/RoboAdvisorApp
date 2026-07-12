@@ -42,6 +42,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
+    "apk": "eas build -p android --profile preview",
     "vercel-build": "expo export -p web"
   },
   "private": true
