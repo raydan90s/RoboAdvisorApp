@@ -13,6 +13,7 @@ import CuestionarioPage from '@/app/inversionista/pages/CuestionarioPage';
 import InicioPage from '@/app/inversionista/pages/InicioPage';
 import MercadosSimuladorPage from '@/app/inversionista/pages/MercadosSimuladorPage';
 import MisSubcuentasPage from '@/app/inversionista/pages/MisSubcuentasPage';
+import NoticiasPage from '@/app/inversionista/pages/NoticiasPage';
 import NuevaSubcuentaPage from '@/app/inversionista/pages/NuevaSubcuentaPage';
 import PropuestaPage from '@/app/inversionista/pages/PropuestaPage';
 import SimuladorPage from '@/app/inversionista/pages/SimuladorPage';
@@ -25,10 +26,12 @@ import type {
   AdvisorTabParamList,
   AuthStackParamList,
   InvestorStackParamList,
+  InvestorTabParamList,
 } from '@/types/navigation';
 
 const Auth = createNativeStackNavigator<AuthStackParamList>();
 const Investor = createNativeStackNavigator<InvestorStackParamList>();
+const InvestorTab = createBottomTabNavigator<InvestorTabParamList>();
 const Advisor = createNativeStackNavigator<AdvisorStackParamList>();
 const AdvisorTab = createBottomTabNavigator<AdvisorTabParamList>();
 
@@ -68,6 +71,46 @@ function InvestorStack() {
       <Investor.Screen name="Mercados" component={MercadosSimuladorPage} />
       <Investor.Screen name="VincularWhatsApp" component={VincularWhatsAppPage} />
     </Investor.Navigator>
+  );
+}
+
+/**
+ * El layout del inversionista: su operación en un tab y las noticias en el otro.
+ * El stack completo vive DENTRO del primer tab, así el feed queda a un toque desde
+ * cualquier pantalla — que era el punto de la sugerencia del jurado.
+ */
+function InvestorTabs() {
+  const colores = useColores();
+
+  return (
+    <InvestorTab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: colores.primario,
+        tabBarInactiveTintColor: colores.textoMuted,
+      }}
+    >
+      <InvestorTab.Screen
+        name="InicioTab"
+        component={InvestorStack}
+        options={{
+          title: 'Inicio',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="wallet-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <InvestorTab.Screen
+        name="NoticiasTab"
+        component={NoticiasPage}
+        options={{
+          title: 'Noticias',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="newspaper-outline" color={color} size={size} />
+          ),
+        }}
+      />
+    </InvestorTab.Navigator>
   );
 }
 
@@ -140,5 +183,5 @@ export default function RootNavigator() {
 
   if (!token || !role) return <AuthStack />;
 
-  return role === 'advisor' ? <AdvisorStack /> : <InvestorStack />;
+  return role === 'advisor' ? <AdvisorStack /> : <InvestorTabs />;
 }

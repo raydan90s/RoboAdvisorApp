@@ -51,6 +51,16 @@ export type InvestorStackParamList = {
   VincularWhatsApp: undefined;
 };
 
+/**
+ * Los tabs del inversionista: su operación (el stack completo de subcuentas) y el
+ * feed de noticias. El feed va como tab propio porque es contenido para "suapear"
+ * (la sugerencia del jurado): enterrado dentro de otra pantalla nadie lo descubre.
+ */
+export type InvestorTabParamList = {
+  InicioTab: undefined;
+  NoticiasTab: undefined;
+};
+
 /** Las dos listas del asesor: independientes entre sí, por eso son tabs. */
 export type AdvisorTabParamList = {
   ColaRevision: undefined;
