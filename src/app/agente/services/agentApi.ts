@@ -25,12 +25,12 @@ export interface AgentChatResponse {
   en_alcance: boolean;
   /**
    * La ruta que tomó el router del backend:
-   * "bancario" (solo datos del banco) | "mixto" (banco + Alpha Vantage) |
-   * "externo" (100% Alpha Vantage) | "rechazo" (fuera de alcance).
-   * "mixto"/"externo" son instrumentos simulados, fuera del catálogo del banco —
-   * la burbuja los pinta distinto (ver `Burbuja.tsx`).
+   * "bancario" (solo datos del banco) | "asesoria" ("¿dónde invierto?": el banco
+   * responde y el cierre trae un adicional de mercados + titulares) | "mixto"
+   * (banco + Alpha Vantage) | "externo" (100% Alpha Vantage) | "noticias" (GNews) |
+   * "rechazo" (fuera de alcance).
    */
-  ruta: 'bancario' | 'mixto' | 'externo' | 'rechazo';
+  ruta: 'bancario' | 'asesoria' | 'mixto' | 'externo' | 'noticias' | 'rechazo';
 }
 
 export interface AgentChatRequest {
