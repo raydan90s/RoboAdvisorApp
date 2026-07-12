@@ -14,17 +14,29 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { getTasas } from '@/app/inversionista/services/catalogApi';
+import type { TasaInstrumento } from '@/app/inversionista/types/catalogo';
 import BotonAtras from '@/components/shared/BotonAtras';
 import Calificacion from '@/components/shared/Calificacion';
 import EstadoBadge from '@/components/shared/EstadoBadge';
 import { Cargando, ErrorEstado } from '@/components/shared/Estados';
 import ExplicacionIA from '@/components/shared/ExplicacionIA';
+import SelectorInstrumento from '@/components/shared/SelectorInstrumento';
+import { COLORES } from '@/constants/colores';
 import { ApiError } from '@/services/http';
 import type { AdvisorStackParamList } from '@/types/navigation';
 import { fechaHora, plazo, porcentaje, usd } from '@/utils/formato';
 
 import { getPropuesta, revisarPropuesta } from '../services/advisorApi';
 import type { Decision, PropuestaDetalle } from '../types/asesor';
+
+/** Una línea mientras el asesor la edita: el % es texto porque lo está escribiendo. */
+interface LineaEdicion {
+  code: string;
+  nombre: string;
+  detalle: string;
+  porcentaje: string;
+}
 
 type Props = NativeStackScreenProps<AdvisorStackParamList, 'DetallePropuesta'>;
 
@@ -56,8 +68,9 @@ export default function DetallePropuestaPage({ navigation, route }: Props) {
 
   const [comentario, setComentario] = useState('');
   const [editando, setEditando] = useState(false);
-  /** { instrumento_code: porcentaje escrito a mano } */
-  const [edicion, setEdicion] = useState<Record<string, string>>({});
+  /** Las líneas que el asesor está armando: puede quitar, agregar y reponderar. */
+  const [lineasEdicion, setLineasEdicion] = useState<LineaEdicion[]>([]);
+  const [catalogo, setCatalogo] = useState<TasaInstrumento[] | null>(null);
 
   const [enviando, setEnviando] = useState<Decision | null>(null);
   const [errorDecision, setErrorDecision] = useState<string | null>(null);
@@ -76,15 +89,29 @@ export default function DetallePropuestaPage({ navigation, route }: Props) {
     void cargar();
   }, [cargar]);
 
-  function abrirEdicion(d: PropuestaDetalle) {
-    setEdicion(
-      Object.fromEntries(d.allocations.map((l) => [l.instrumento_code, String(l.porcentaje)])),
+  async function abrirEdicion(d: PropuestaDetalle) {
+    setLineasEdicion(
+      d.allocations.map((l) => ({
+        code: l.instrumento_code,
+        nombre: l.nombre,
+        detalle: `${l.institucion} · ${l.calificacion}`,
+        porcentaje: String(l.porcentaje),
+      })),
     );
     setEditando(true);
+    // El catálogo completo: el asesor puede usar cualquier producto aprobado (a
+    // diferencia del cliente, a quien el servidor le exige elegibilidad).
+    if (!catalogo) {
+      try {
+        setCatalogo((await getTasas()).tasas);
+      } catch {
+        setCatalogo([]);
+      }
+    }
   }
 
-  const sumaEditada = Object.values(edicion).reduce(
-    (total, valor) => total + (Number(valor.replace(',', '.')) || 0),
+  const sumaEditada = lineasEdicion.reduce(
+    (total, linea) => total + (Number(linea.porcentaje.replace(',', '.')) || 0),
     0,
   );
 
@@ -98,11 +125,9 @@ export default function DetallePropuestaPage({ navigation, route }: Props) {
         comments: comentario.trim() || undefined,
         edited_allocation:
           decision === 'edited'
-            ? detalle.allocations.map((l) => ({
-                instrumento_code: l.instrumento_code,
-                porcentaje: Number(
-                  (edicion[l.instrumento_code] ?? '0').replace(',', '.'),
-                ),
+            ? lineasEdicion.map((l) => ({
+                instrumento_code: l.code,
+                porcentaje: Number(l.porcentaje.replace(',', '.')),
               }))
             : undefined,
       });
@@ -135,7 +160,7 @@ export default function DetallePropuestaPage({ navigation, route }: Props) {
 
   const yaDecidida = detalle.estado !== 'pending_review';
   const rechazoSinComentario = comentario.trim().length === 0;
-  const edicionValida = Math.abs(sumaEditada - 100) < 0.005;
+  const edicionValida = Math.abs(sumaEditada - 100) < 0.005 && lineasEdicion.length > 0;
 
   return (
     <SafeAreaView className="flex-1 bg-surface-background">
@@ -224,76 +249,125 @@ export default function DetallePropuestaPage({ navigation, route }: Props) {
             Asignación propuesta
           </Text>
 
-          {detalle.allocations.map((linea) => (
-            <View
-              key={linea.instrumento_code}
-              className="gap-3 rounded-2xl border border-surface-border bg-surface-background p-5"
-            >
-              <View className="gap-1">
-                <Text className="text-body-md font-bold text-text-primary">
-                  {linea.nombre}
-                </Text>
-                <Text className="text-caption text-text-muted">
-                  {linea.instrumento_code} · {plazo(linea.plazo_dias)}
-                  {linea.monto_minimo != null
-                    ? ` · mínimo de acceso ${usd(linea.monto_minimo)}`
-                    : ''}
+          {!editando
+            ? detalle.allocations.map((linea) => (
+                <View
+                  key={linea.instrumento_code}
+                  className="gap-3 rounded-2xl border border-surface-border bg-surface-background p-5"
+                >
+                  <View className="gap-1">
+                    <Text className="text-body-md font-bold text-text-primary">
+                      {linea.nombre}
+                    </Text>
+                    <Text className="text-caption text-text-muted">
+                      {linea.instrumento_code} · {plazo(linea.plazo_dias)}
+                      {linea.monto_minimo != null
+                        ? ` · mínimo de acceso ${usd(linea.monto_minimo)}`
+                        : ''}
+                    </Text>
+                  </View>
+
+                  <Calificacion
+                    institucion={linea.institucion}
+                    calificacion={linea.calificacion}
+                    fuente={linea.calificacion_fuente}
+                    fecha={linea.calificacion_fecha}
+                  />
+
+                  <View className="flex-row items-baseline gap-2 rounded-2xl bg-surface-canvas px-4 py-3">
+                    <Text className="text-title font-bold text-text-primary">
+                      {porcentaje(linea.porcentaje)}
+                    </Text>
+                    <Text className="text-body text-text-secondary">
+                      · {usd(linea.monto_asignado)}
+                    </Text>
+                  </View>
+                </View>
+              ))
+            : lineasEdicion.map((linea) => (
+                <View
+                  key={linea.code}
+                  className="gap-3 rounded-2xl border border-surface-border bg-surface-background p-4"
+                >
+                  <View className="flex-row items-start justify-between gap-3">
+                    <View className="flex-1">
+                      <Text className="text-body-md font-bold text-text-primary">
+                        {linea.nombre}
+                      </Text>
+                      <Text className="text-caption text-text-muted">{linea.detalle}</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() =>
+                        setLineasEdicion((prev) =>
+                          prev.filter((l) => l.code !== linea.code),
+                        )
+                      }
+                      className="h-8 w-8 items-center justify-center rounded-xl bg-stateAlpha-errorSoft"
+                    >
+                      <Ionicons name="close" size={18} color={COLORES.error} />
+                    </TouchableOpacity>
+                  </View>
+                  <View className="flex-row items-center gap-3">
+                    <TextInput
+                      value={linea.porcentaje}
+                      onChangeText={(texto) =>
+                        setLineasEdicion((prev) =>
+                          prev.map((l) =>
+                            l.code === linea.code ? { ...l, porcentaje: texto } : l,
+                          ),
+                        )
+                      }
+                      keyboardType="numeric"
+                      inputMode="decimal"
+                      className="w-24 rounded-xl border border-surface-border bg-surface-elevated px-3 py-2 text-body-md font-bold text-text-primary"
+                    />
+                    <Text className="text-body text-text-secondary">
+                      % — los USD los recalcula el sistema
+                    </Text>
+                  </View>
+                </View>
+              ))}
+
+          {editando ? (
+            <>
+              <View
+                className={`rounded-2xl px-5 py-3 ${
+                  edicionValida ? 'bg-stateAlpha-successSoft' : 'bg-stateAlpha-errorSoft'
+                }`}
+              >
+                <Text
+                  className={`text-body font-bold ${
+                    edicionValida ? 'text-state-success' : 'text-state-error'
+                  }`}
+                >
+                  Suma: {porcentaje(sumaEditada)}
+                  {edicionValida ? ' — válida' : ' — debe ser exactamente 100%'}
                 </Text>
               </View>
 
-              <Calificacion
-                institucion={linea.institucion}
-                calificacion={linea.calificacion}
-                fuente={linea.calificacion_fuente}
-                fecha={linea.calificacion_fecha}
-              />
-
-              {editando ? (
-                <View className="flex-row items-center gap-3">
-                  <TextInput
-                    value={edicion[linea.instrumento_code] ?? ''}
-                    onChangeText={(texto) =>
-                      setEdicion((prev) => ({
-                        ...prev,
-                        [linea.instrumento_code]: texto,
-                      }))
-                    }
-                    keyboardType="numeric"
-                    inputMode="decimal"
-                    className="w-24 rounded-xl border border-surface-border bg-surface-elevated px-3 py-2 text-body-md font-bold text-text-primary"
-                  />
-                  <Text className="text-body text-text-secondary">
-                    % — los USD los recalcula el sistema
-                  </Text>
-                </View>
-              ) : (
-                <View className="flex-row items-baseline gap-2 rounded-2xl bg-surface-canvas px-4 py-3">
-                  <Text className="text-title font-bold text-text-primary">
-                    {porcentaje(linea.porcentaje)}
-                  </Text>
-                  <Text className="text-body text-text-secondary">
-                    · {usd(linea.monto_asignado)}
-                  </Text>
-                </View>
-              )}
-            </View>
-          ))}
-
-          {editando ? (
-            <View
-              className={`rounded-2xl px-5 py-3 ${
-                edicionValida ? 'bg-brandAlpha-accentSoft' : 'bg-stateAlpha-errorSoft'
-              }`}
-            >
-              <Text
-                className={`text-body font-bold ${
-                  edicionValida ? 'text-text-primary' : 'text-state-error'
-                }`}
-              >
-                Suma: {porcentaje(sumaEditada)}
-                {edicionValida ? ' — válida' : ' — debe ser exactamente 100%'}
+              <Text className="mt-1 text-caption font-bold uppercase text-text-secondary">
+                Agregar del catálogo
               </Text>
-            </View>
+              {catalogo === null ? (
+                <ActivityIndicator color={COLORES.primario} />
+              ) : (
+                <SelectorInstrumento
+                  tasas={catalogo}
+                  excluir={lineasEdicion.map((l) => l.code)}
+                  onAgregar={(tasa) =>
+                    setLineasEdicion((prev) => [
+                      ...prev,
+                      {
+                        code: tasa.code,
+                        nombre: tasa.producto,
+                        detalle: `${tasa.institucion} · ${tasa.calificacion}`,
+                        porcentaje: '',
+                      },
+                    ])
+                  }
+                />
+              )}
+            </>
           ) : null}
 
           {/* El texto del LLM, marcado como tal: el asesor tiene que saber qué leyó su
@@ -410,7 +484,7 @@ export default function DetallePropuestaPage({ navigation, route }: Props) {
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    onPress={() => abrirEdicion(detalle)}
+                    onPress={() => void abrirEdicion(detalle)}
                     disabled={enviando !== null}
                     activeOpacity={0.85}
                     className="items-center rounded-2xl border border-brand-primary py-4"

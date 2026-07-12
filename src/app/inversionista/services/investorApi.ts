@@ -3,6 +3,7 @@ import http from '@/services/http';
 import type {
   Investor,
   InvestorProfileCreate,
+  LineaAsignacion,
   PortfolioProposal,
   Pregunta,
   ProfilingBreakdown,
@@ -43,6 +44,21 @@ export function fijarCapital(capitalTotal: number): Promise<ResumenCapital> {
   return http.post<ResumenCapital>('/api/investor/capital', {
     capital_total: capitalTotal,
   });
+}
+
+/**
+ * El cliente arma su mezcla: agrega, quita o repondera fondos. El servidor exige
+ * suma 100, catálogo cerrado y elegibilidad del perfil; devuelve la propuesta ya
+ * reescrita (sigue `pending_review`: el asesor conserva la última palabra).
+ */
+export function editarAsignacion(
+  proposalId: string,
+  allocations: LineaAsignacion[],
+): Promise<PortfolioProposal> {
+  return http.put<PortfolioProposal>(
+    `/api/investor/proposals/${proposalId}/allocation`,
+    { allocations },
+  );
 }
 
 export function getBreakdown(

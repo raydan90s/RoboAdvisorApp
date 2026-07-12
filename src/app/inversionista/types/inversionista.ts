@@ -115,6 +115,12 @@ export interface AssetAllocation {
   calificacion_fecha: string | null;
 }
 
+/** Una línea del PUT /api/investor/proposals/{id}/allocation. */
+export interface LineaAsignacion {
+  instrumento_code: string;
+  porcentaje: number;
+}
+
 export interface PortfolioProposal {
   proposal_id: string;
   investor_id: string;
