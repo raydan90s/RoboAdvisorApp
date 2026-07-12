@@ -18,7 +18,14 @@ const FUENTE: Record<string, string> = {
   scoring_rules: 'De las reglas de tu perfil',
   instruments: 'Del catálogo de productos',
   institutions: 'Del catálogo de emisores',
+  // Mercados externos (Rutas B/C): fuera del catálogo del banco, por eso el nombre
+  // de la fuente lo dice explícito en vez de sonar a producto propio.
+  alpha_vantage: 'De Alpha Vantage (mercado externo, no es del banco)',
 };
+
+// Los chips de mercado se pintan en ámbar (mismo lenguaje visual que la burbuja) en
+// vez del azul de marca: refuerzan que el dato es una simulación, no del catálogo.
+const esFuenteExterna = (table: string) => table === 'alpha_vantage';
 
 export default function SourceChips({ sources }: { sources: SourceChip[] }) {
   const [abierto, setAbierto] = useState<string | null>(null);
@@ -30,19 +37,30 @@ export default function SourceChips({ sources }: { sources: SourceChip[] }) {
       <View className="flex-row flex-wrap gap-1.5">
         {sources.map((s) => {
           const activo = abierto === s.record_id;
+          const externa = esFuenteExterna(s.table);
           return (
             <TouchableOpacity
               key={`${s.table}-${s.record_id}`}
               activeOpacity={0.7}
               onPress={() => setAbierto(activo ? null : s.record_id)}
               className={`flex-row items-center gap-1 rounded-full border px-2.5 py-1 ${
-                activo
-                  ? 'border-brand-primary bg-brandAlpha-primaryMedium'
-                  : 'border-brandAlpha-primaryMedium bg-brandAlpha-primarySoft'
+                externa
+                  ? activo
+                    ? 'border-state-warning bg-stateAlpha-warningSoft'
+                    : 'border-state-warning bg-stateAlpha-warningSoft'
+                  : activo
+                    ? 'border-brand-primary bg-brandAlpha-primaryMedium'
+                    : 'border-brandAlpha-primaryMedium bg-brandAlpha-primarySoft'
               }`}
             >
-              <Ionicons name="document-text-outline" size={11} color="#1E3A8A" />
-              <Text className="text-caption font-semibold text-brand-primary">
+              <Ionicons
+                name={externa ? 'trending-up-outline' : 'document-text-outline'}
+                size={11}
+                color={externa ? '#C77700' : '#1E3A8A'}
+              />
+              <Text
+                className={`text-caption font-semibold ${externa ? 'text-state-warning' : 'text-brand-primary'}`}
+              >
                 {s.label}
               </Text>
             </TouchableOpacity>

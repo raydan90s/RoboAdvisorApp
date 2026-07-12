@@ -13,6 +13,12 @@ export interface Mensaje {
   sources?: SourceChip[];
   /** Qué modelo redactó la respuesta (gpt-4o-mini, gemini-…, plantilla, refuse). */
   modelo?: string;
+  /**
+   * La ruta del router: "bancario" | "mixto" | "externo" | "rechazo". "mixto" y
+   * "externo" citan instrumentos de Alpha Vantage — FUERA del catálogo del banco —,
+   * así que la burbuja se pinta distinto (borde ámbar + ícono de aviso).
+   */
+  ruta?: 'bancario' | 'mixto' | 'externo' | 'rechazo';
   /** Mientras se espera la respuesta del backend: muestra los puntitos. */
   pending?: boolean;
   /** La respuesta fue un error de red/servidor, no del agente. */
@@ -25,6 +31,11 @@ function etiquetaModelo(modelo: string): string | null {
   if (modelo === 'refuse') return null; // rechazo por alcance: no viene de un modelo
   if (modelo === 'plantilla-determinista') return 'plantilla (sin IA)';
   return modelo;
+}
+
+/** true si la ruta cita mercados externos (Alpha Vantage), simulados y fuera del banco. */
+function esRutaExterna(ruta?: Mensaje['ruta']): boolean {
+  return ruta === 'mixto' || ruta === 'externo';
 }
 
 /** Tres puntitos que laten mientras el asistente "escribe". */
@@ -81,23 +92,41 @@ export default function Burbuja({ mensaje }: { mensaje: Mensaje }) {
     );
   }
 
+  const externa = esRutaExterna(mensaje.ruta);
+
   return (
     <View className="mb-3 flex-row items-end gap-2">
       <AvatarAsistente />
       <View className="max-w-[82%] flex-1">
         <View
-          className={`self-start rounded-2xl rounded-bl-md px-4 py-2.5 ${
-            mensaje.error ? 'bg-stateAlpha-errorSoft' : 'bg-surface-secondary'
+          className={`self-start rounded-2xl rounded-bl-md border px-4 py-2.5 ${
+            mensaje.error
+              ? 'border-transparent bg-stateAlpha-errorSoft'
+              : externa
+                ? 'border-state-warning bg-stateAlpha-warningSoft'
+                : 'border-transparent bg-surface-secondary'
           }`}
         >
           {mensaje.pending ? (
             <TypingDots />
           ) : (
-            <Text
-              className={`text-body ${mensaje.error ? 'text-state-error' : 'text-text-primary'}`}
-            >
-              {mensaje.texto}
-            </Text>
+            <>
+              {/* Aviso obligatorio de las Rutas B/C: instrumento simulado, fuera del
+                  catálogo del banco. Va ANTES del texto para que no pase inadvertido. */}
+              {externa ? (
+                <View className="mb-1.5 flex-row items-center gap-1.5">
+                  <Ionicons name="alert-circle" size={13} color="#C77700" />
+                  <Text className="text-caption font-bold uppercase text-state-warning">
+                    Simulación educativa · fuera del banco
+                  </Text>
+                </View>
+              ) : null}
+              <Text
+                className={`text-body ${mensaje.error ? 'text-state-error' : 'text-text-primary'}`}
+              >
+                {mensaje.texto}
+              </Text>
+            </>
           )}
         </View>
 

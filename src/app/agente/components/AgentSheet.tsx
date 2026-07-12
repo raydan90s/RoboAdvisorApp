@@ -32,6 +32,7 @@ const SUGERENCIAS = [
   '¿Cómo se calculó mi perfil?',
   '¿Por qué esta distribución?',
   '¿Qué riesgo tiene mi cartera?',
+  '¿Cómo está el bitcoin hoy?',
 ];
 
 const saludo = (): Mensaje => ({
@@ -108,6 +109,7 @@ export default function AgentSheet({ visible, onClose, sessionId }: Props) {
                 texto: r.texto,
                 sources: r.sources,
                 modelo: r.modelo,
+                ruta: r.ruta,
               }
             : msg,
         ),

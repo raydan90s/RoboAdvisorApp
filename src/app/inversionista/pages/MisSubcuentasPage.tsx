@@ -24,6 +24,7 @@ import type { InvestorStackParamList } from '@/types/navigation';
 import { montoANumero, montoConSeparadores } from '@/utils/formato';
 
 import BarraCapital from '../components/BarraCapital';
+import MarketTicker from '../components/MarketTicker';
 import TarjetaSubcuenta from '../components/TarjetaSubcuenta';
 import { fijarCapital, getSubcuentas } from '../services/investorApi';
 import type { ResumenCapital } from '../types/inversionista';
@@ -219,6 +220,12 @@ export default function MisSubcuentasPage({ navigation }: Props) {
             className="flex-1 bg-surface-canvas"
             contentContainerClassName="px-5 py-6 gap-4"
           >
+            {/* -mx-5 cancela el padding del ScrollView: el ticker desliza de borde
+                a borde de la pantalla, a diferencia de las demás secciones. */}
+            <View className="-mx-5">
+              <MarketTicker />
+            </View>
+
             <View className="gap-4 rounded-2xl border border-surface-border bg-surface-background p-5">
               <BarraCapital
                 capitalTotal={resumen.capital_total}

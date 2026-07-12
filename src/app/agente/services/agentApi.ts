@@ -23,6 +23,14 @@ export interface AgentChatResponse {
   /** El modelo de Gemini, la plantilla determinista o el rechazo por alcance. */
   modelo: string;
   en_alcance: boolean;
+  /**
+   * La ruta que tomó el router del backend:
+   * "bancario" (solo datos del banco) | "mixto" (banco + Alpha Vantage) |
+   * "externo" (100% Alpha Vantage) | "rechazo" (fuera de alcance).
+   * "mixto"/"externo" son instrumentos simulados, fuera del catálogo del banco —
+   * la burbuja los pinta distinto (ver `Burbuja.tsx`).
+   */
+  ruta: 'bancario' | 'mixto' | 'externo' | 'rechazo';
 }
 
 export interface AgentChatRequest {

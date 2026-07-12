@@ -1,0 +1,28 @@
+import http from '@/services/http';
+
+/**
+ * Cotizaciones de mercados externos. Espejo de `src/models/market.py` del backend.
+ *
+ * Deliberadamente separado de `investorApi.ts`: estos instrumentos NO están en el
+ * catálogo del banco y nunca deben mezclarse con una propuesta real.
+ */
+export interface MarketQuote {
+  symbol: string;
+  price: number;
+  change_percent: number;
+  /** "alpha_vantage" (en vivo) o "mock" (respaldo simulado, ver market_data.py). */
+  source: 'alpha_vantage' | 'mock';
+  as_of: string;
+}
+
+interface MarketQuotesResponse {
+  quotes: MarketQuote[];
+}
+
+/** Sin `symbols`, el backend devuelve los 5 del ticker (BTCUSD, XAUUSD, JPN225, SPY, EURUSD). */
+export function getCotizaciones(symbols?: string[]): Promise<MarketQuote[]> {
+  const query = symbols?.length ? `?symbols=${encodeURIComponent(symbols.join(','))}` : '';
+  return http
+    .get<MarketQuotesResponse>(`/api/market/quotes${query}`)
+    .then((r) => r.quotes);
+}
