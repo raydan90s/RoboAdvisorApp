@@ -38,6 +38,12 @@
     ],
     "experiments": {
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "8178b68c-ea40-40ea-b128-d8bb2ea9ae87"
+      }
+    },
+    "owner": "alatacompany"
   }
 }
