@@ -1,23 +1,46 @@
 # Brokeate — Robo-Advisor con asesor humano en el lazo
 
-App móvil y web (Expo / React Native) de un robo-advisor: el cliente responde un test
-de riesgo, el sistema calcula su perfil **en la base de datos**, arma una propuesta de
-portafolio con el catálogo del banco y un **asesor humano la aprueba, edita o rechaza**
-antes de que sea definitiva. Un agente conversacional (LangGraph + Gemini) explica los
-números, pero nunca los inventa.
+Robo-advisor donde el cliente responde un test de riesgo, el sistema calcula su perfil
+**en la base de datos**, arma una propuesta de portafolio con el catálogo del banco y un
+**asesor humano la aprueba, edita o rechaza** antes de que sea definitiva. Un agente
+conversacional (LangGraph) explica los números, pero nunca los inventa.
 
 Hackathon de Agentes Financieros IA — **Track 3: Robo-Advisory y Automatización de
 Estrategias de Inversión**.
 
 ---
 
-## Repositorios
+## Dónde probarlo
 
-Este repo es el **frontend Expo** y, además, el paraguas del proyecto: trae el backend y
-la web como submódulos de git.
+| Plataforma | Cómo entrar |
+|---|---|
+| **Web** (Vercel) | **<https://brokeate-web.vercel.app>** |
+| **Android** (APK) | **[Descargar el APK](https://expo.dev/accounts/alatacompany/projects/RoboAdvisorApp/builds/3759fec8-8b58-4de2-bf78-8dfe21d00e53)** (build de EAS, perfil `preview`) |
+| **Backend** | Desplegado en **AWS**. La URL no se publica aquí: se configura en el `.env` de cada cliente (`EXPO_PUBLIC_API_BASE_URL` / `VITE_API_BASE_URL`). |
+
+Cuentas demo (las siembra `seed.sql`):
+
+| Correo | Rol | Contraseña |
+|---|---|---|
+| `inversionista@demo.ec` | inversionista | `demo1234` |
+| `juan@demo.ec` | inversionista (perfil Moderado, con datos) | `demo1234` |
+| `asesor@demo.ec` | asesor | `demo1234` |
+
+---
+
+## Los tres repositorios
+
+Brokeate son tres repos. Este (`BROKEATE-APP`) es la **app móvil Expo** y además el
+paraguas del proyecto: trae los otros dos como submódulos de git.
+
+| Repo | Qué es | Ruta como submódulo |
+|---|---|---|
+| **[BROKEATE-APP](https://github.com/raydan90s/BROKEATE-APP)** (este) | App móvil — Expo / React Native. Se distribuye como **APK**. | — |
+| **[BROKEATE-BACKEND](https://github.com/raydan90s/BROKEATE-BACKEND)** | API — FastAPI + Postgres (Supabase) + agente LangGraph. Corre en **AWS**. | `backend/` |
+| **[BROKEATE-WEB](https://github.com/raydan90s/BROKEATE-WEB)** | Frontend web — Vite + React DOM. Desplegado en **Vercel**. | `web/` |
 
 ```bash
-git clone --recurse-submodules https://github.com/raydan90s/RoboAdvisorApp.git
+git clone --recurse-submodules https://github.com/raydan90s/BROKEATE-APP.git
 # si ya lo clonaste sin submódulos:
 git submodule update --init --recursive
 ```
@@ -28,8 +51,8 @@ git submodule update --init --recursive
 
 ### 1. Backend
 
-Ver [backend/README.md](backend/README.md) para el detalle (Supabase, `schema.sql`,
-`seed.sql`, keys de Gemini y Alpha Vantage). En corto:
+Detalle completo en [BROKEATE-BACKEND](https://github.com/raydan90s/BROKEATE-BACKEND)
+(Supabase, `schema.sql`, `seed.sql`, keys de IA y de mercados). En corto:
 
 ```powershell
 cd backend
@@ -40,41 +63,41 @@ uvicorn src.main:app --reload --host 0.0.0.0
 
 Requiere **Python 3.12**.
 
-### 2. Frontend
+### 2. App móvil (este repo)
 
 ```powershell
 npm install
-npx expo start        # w = web · a = Android · o escanea el QR con Expo Go
+npx expo start        # a = Android · w = web · o escanea el QR con Expo Go
 ```
 
-Variables de entorno (archivo `.env` en la raíz, ver `.env` de ejemplo):
+Variables de entorno (archivo `.env` en la raíz, ver [.env.example](.env.example)):
 
 | Variable | Para qué |
 |---|---|
-| `EXPO_PUBLIC_API_BASE_URL` | URL del backend. Contra el desplegado: `https://roboadvisory-backend.onrender.com` |
+| `EXPO_PUBLIC_API_BASE_URL` | URL del backend (el desplegado en AWS, o tu local) |
 | `EXPO_PUBLIC_WHATSAPP_NUMERO` | Número del bot de Twilio; solo prellena el mensaje al abrir WhatsApp |
 
 > **Desde un celular físico:** `localhost` apunta al teléfono, no a tu PC. Levanta el
 > backend con `--host 0.0.0.0` y pon la IP local de tu máquina
 > (`http://192.168.x.x:8000`) en `EXPO_PUBLIC_API_BASE_URL`.
 
-### Cuentas demo (las siembra `seed.sql`)
+### 3. Web
 
-| Correo | Rol | Contraseña |
-|---|---|---|
-| `inversionista@demo.ec` | inversionista | `demo1234` |
-| `juan@demo.ec` | inversionista (perfil Moderado, con datos) | `demo1234` |
-| `asesor@demo.ec` | asesor | `demo1234` |
+```powershell
+cd web
+npm install
+npm run dev           # http://localhost:5173
+```
 
 ### Scripts
 
 | Comando | Qué hace |
 |---|---|
 | `npm start` | Expo dev server |
-| `npm run web` / `android` / `ios` | Arranca en un target concreto |
+| `npm run android` / `ios` / `web` | Arranca en un target concreto |
 | `npm run typecheck` | `tsc --noEmit` |
-| `npm run apk` | Build de APK en EAS (perfil `preview`) |
-| `npm run vercel-build` | `expo export -p web` → `dist/` (lo que despliega Vercel) |
+| `npm run apk` | Build del APK en EAS (perfil `preview`) |
+| `npm run vercel-build` | `expo export -p web` → `dist/` |
 
 ---
 
@@ -90,9 +113,9 @@ Variables de entorno (archivo `.env` en la raíz, ver `.env` de ejemplo):
 - **expo-secure-store** para el JWT.
 - Backend: **FastAPI + Postgres (Supabase) + LangGraph**; mercados externos vía **Alpha
   Vantage** (wrapper cacheado 1 h con respaldo simulado, porque el free tier son 25
-  requests/día).
+  requests/día) y noticias vía **GNews**.
 
-## Estructura del frontend
+## Estructura de la app
 
 ```
 src/
@@ -127,8 +150,8 @@ El **rol del token decide toda la navegación**: `advisor` ve la cola y la audit
 
 Además: **subcuentas** (repartir el capital total en varios objetivos, cada uno con su
 propio perfil y propuesta), **comparador de tasas** con elegibilidad por perfil,
-**simulador** bancario, **simulador de mercados globales** con gráfico histórico, y
-**ticker** de mercados en el home.
+**simulador** bancario, **simulador de mercados globales** con gráfico histórico,
+**feed de noticias**, **ticker** de mercados en el home y un **bot de WhatsApp**.
 
 ---
 
@@ -157,27 +180,30 @@ propio perfil y propuesta), **comparador de tasas** con elegibilidad por perfil,
 
 ## Pruebas
 
-- **Backend:** 58 tests con `pytest -q` (desde `backend/`). Corren contra la base real
-  sembrada por `seed.sql`: validar el motor determinista contra un mock no probaría
-  nada, porque el motor *es* la base. Cubren scoring, umbrales, subcuentas (el trigger
-  de capital), elegibilidad, guardarraíles y los nodos del grafo del agente con el LLM
-  mockeado.
-- **Frontend:** `npm run typecheck` (tsc estricto). Los flujos de chat, ticker y
-  simulador de mercados se verificaron de punta a punta con Playwright contra el backend
-  real.
+- **Backend:** `pytest -q` desde `backend/`. Corren contra la base real sembrada por
+  `seed.sql`: validar el motor determinista contra un mock no probaría nada, porque el
+  motor *es* la base. Cubren scoring, umbrales, subcuentas (el trigger de capital),
+  elegibilidad, edición de asignación, simulador, feed, WhatsApp, guardarraíles y los
+  nodos del grafo del agente con el LLM mockeado.
+- **App / web:** `npm run typecheck` (tsc estricto). Los flujos de chat, ticker y
+  simulador de mercados se verificaron de punta a punta contra el backend real.
 
 ---
 
 ## Despliegue
 
-- **Frontend → Vercel:** [vercel.json](vercel.json) define el build (`expo export -p
-  web` → `dist/`). El proyecto vive en una cuenta de Vercel distinta a la del owner del
-  repo, así que el auto-deploy por push no está conectado: tras cambios hay que correr
-  `vercel deploy --prod`.
-- **Backend → Render:** blueprint en `backend/render.yaml`, `autoDeploy` activo. Las
-  keys (`DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`, `ALPHA_VANTAGE_API_KEY`,
-  `CORS_ORIGINS`) se setean en el dashboard.
-- **Android:** `npm run apk` (EAS, perfil `preview`).
+- **App → APK:** `npm run apk` (EAS, perfil `preview`, `buildType: apk`). Los perfiles
+  están en [eas.json](eas.json); `production` genera un app-bundle para Play Store.
+- **Web → Vercel:** el repo [BROKEATE-WEB](https://github.com/raydan90s/BROKEATE-WEB) es
+  el que se despliega (Vite → `dist/`, con rewrite SPA). `VITE_API_BASE_URL` y
+  `VITE_WHATSAPP_NUMERO` se declaran a mano en Settings → Environment Variables.
+- **Backend → AWS:** `uvicorn` sirviendo `src.main:app`, con las variables de entorno
+  (base, JWT, keys de IA, mercados, Twilio, SMTP) configuradas en el servidor, nunca en
+  el repo. Healthcheck en `/health`.
+
+> Este repo también trae [vercel.json](vercel.json) para exportar la app Expo a web
+> (`expo export -p web`). Es un camino alterno: **la web que está en producción es
+> BROKEATE-WEB**.
 
 ---
 
@@ -185,11 +211,6 @@ propio perfil y propuesta), **comparador de tasas** con elegibilidad por perfil,
 
 | Archivo | Contenido |
 |---|---|
-| [backend/README.md](backend/README.md) | Endpoints, esquema, migraciones, variables |
+| [BROKEATE-BACKEND](https://github.com/raydan90s/BROKEATE-BACKEND) | Endpoints, esquema, migraciones, variables, agente |
+| [BROKEATE-WEB](https://github.com/raydan90s/BROKEATE-WEB) | Port a Vite + React DOM |
 | [AGENTS.md](AGENTS.md) | Regla de oro del repo: Expo SDK 54 pinneado |
-
-## Deuda conocida
-
-El front llama a `POST /api/agent/simulador` y
-`PUT /api/investor/proposals/{id}/allocation`, que **no existen** en el backend actual
-(quedaron en una rama sin mergear). Esas dos llamadas fallan hasta que se implementen.
