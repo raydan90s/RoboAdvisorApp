@@ -20,12 +20,6 @@ Estrategias de Inversión**.
 Este repo es el **frontend Expo** y, además, el paraguas del proyecto: trae el backend y
 la web como submódulos de git.
 
-| Carpeta | Repo | Qué es |
-|---|---|---|
-| (raíz) | este repo | App Expo / React Native (Android, iOS, web) |
-| [backend/](backend/) | [BROKEATE-BACKEND](https://github.com/raydan90s/BROKEATE-BACKEND) | FastAPI + Postgres (Supabase) + agente LangGraph |
-| [web/](web/) | [BROKEATE-WEB](https://github.com/raydan90s/BROKEATE-WEB) | Port web en Vite/React |
-
 ```bash
 git clone --recurse-submodules https://github.com/raydan90s/RoboAdvisorApp.git
 # si ya lo clonaste sin submódulos:
