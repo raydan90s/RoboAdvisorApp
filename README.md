@@ -9,10 +9,6 @@ números, pero nunca los inventa.
 Hackathon de Agentes Financieros IA — **Track 3: Robo-Advisory y Automatización de
 Estrategias de Inversión**.
 
-- **Demo web:** https://roboadvisorapp.vercel.app
-- **API:** https://roboadvisory-backend.onrender.com (`/docs` para el Swagger, `/health`
-  para el healthcheck)
-
 ---
 
 ## Repositorios
