@@ -34,7 +34,15 @@
         }
       ],
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Brokeate usa el micrófono para que puedas preguntarle a tu asistente hablando.",
+          "speechRecognitionPermission": "Brokeate convierte tu voz en texto para responderte con los datos de tu cartera.",
+          "androidSpeechServicePackages": ["com.google.android.googlequicksearchbox"]
+        }
+      ]
     ],
     "experiments": {
       "reactCompiler": true

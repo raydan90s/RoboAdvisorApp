@@ -91,6 +91,9 @@ function InvestorStack() {
  * El layout del inversionista: su operación en un tab y las noticias en el otro.
  * El stack completo vive DENTRO del primer tab, así el feed queda a un toque desde
  * cualquier pantalla — que era el punto de la sugerencia del jurado.
+ *
+ * La voz NO es un tab: vive dentro del `AgentSheet`, que ya tiene el hilo, los chips y
+ * el selector de modelo. Un tab aparte sería la misma conversación en dos lugares.
  */
 function InvestorTabs() {
   const colores = useColores();

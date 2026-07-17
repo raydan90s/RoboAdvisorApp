@@ -46,6 +46,11 @@ export interface AgentChatRequest {
    * reconoce.
    */
   symbols?: string[];
+  /**
+   * Por dónde entró el turno. No cambia nada de lo que hace el agente: solo etiqueta la
+   * fila en la auditoría del backend. Sin él, el turno se guarda como 'api' (escrito).
+   */
+  canal?: 'voz';
 }
 
 /** Un proveedor del catálogo. El backend NUNCA manda las API keys, solo si existen. */
@@ -71,6 +76,26 @@ export function enviarMensaje(
   if (sessionId) body.session_id = sessionId;
   if (provider) body.provider = provider;
   if (symbols?.length) body.symbols = symbols;
+  return http.post<AgentChatResponse>('/api/agent/chat', body);
+}
+
+/**
+ * Un turno dictado por voz. El MISMO endpoint y el MISMO agente que `enviarMensaje`:
+ * el reconocimiento pasa en el teléfono y lo que viaja acá ya es texto.
+ *
+ * Lo único que cambia es la etiqueta con la que el turno queda guardado. Importa porque
+ * si el reconocimiento entendió mal ("sien mil" por "cien mil"), la fila guardada es la
+ * única evidencia de qué creyó el sistema que se le preguntó: saber que salió de un
+ * micrófono es lo que hace auditable ese error.
+ */
+export function enviarMensajeHablado(
+  mensaje: string,
+  sessionId?: string,
+  provider?: string,
+): Promise<AgentChatResponse> {
+  const body: AgentChatRequest = { mensaje, canal: 'voz' };
+  if (sessionId) body.session_id = sessionId;
+  if (provider) body.provider = provider;
   return http.post<AgentChatResponse>('/api/agent/chat', body);
 }
 

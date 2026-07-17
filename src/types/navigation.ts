@@ -67,6 +67,9 @@ export type InvestorStackParamList = {
  * Los tabs del inversionista: su operación (el stack completo de subcuentas) y el
  * feed de noticias. El feed va como tab propio porque es contenido para "suapear"
  * (la sugerencia del jurado): enterrado dentro de otra pantalla nadie lo descubre.
+ *
+ * El asistente por voz no está acá a propósito: es el mismo agente del chat, así que
+ * vive dentro del `AgentSheet` y no en un tab propio.
  */
 export type InvestorTabParamList = {
   InicioTab: undefined;

@@ -16,7 +16,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColores } from '@/context/ThemeContext';
 import { ApiError } from '@/services/http';
 
-import { enviarMensaje, getProviders, type ProviderInfo } from '../services/agentApi';
+import {
+  enviarMensaje,
+  enviarMensajeHablado,
+  getProviders,
+  type ProviderInfo,
+} from '../services/agentApi';
+import { useHablar } from '../services/useHablar';
+import BotonVoz from './BotonVoz';
 import Burbuja, { type Mensaje } from './Burbuja';
 import ProviderSelector from './ProviderSelector';
 
@@ -40,8 +47,8 @@ const saludo = (): Mensaje => ({
   id: 'saludo',
   role: 'assistant',
   texto:
-    'Hola 👋 Soy tu asistente. Puedo explicarte tu perfil de riesgo y tu propuesta ' +
-    'de inversión, y mostrarte de dónde sale cada dato. ¿Qué te gustaría saber?',
+    'Hola 👋 Soy Broki, tu asistente en Brokeate. Puedo explicarte tu perfil de riesgo ' +
+    'y tu propuesta de inversión, y mostrarte de dónde sale cada dato. ¿Qué te gustaría saber?',
 });
 
 let contador = 0;
@@ -53,8 +60,10 @@ export default function AgentSheet({ visible, onClose, sessionId }: Props) {
   const [enviando, setEnviando] = useState(false);
   const [providers, setProviders] = useState<ProviderInfo[]>([]);
   const [proveedor, setProveedor] = useState<string | null>(null);
+  const [escuchando, setEscuchando] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const colores = useColores();
+  const { hablar, callar, hablando, sinVoz } = useHablar();
 
   // Baja el scroll al último mensaje cada vez que llega uno.
   useEffect(() => {
@@ -85,11 +94,26 @@ export default function AgentSheet({ visible, onClose, sessionId }: Props) {
     if (visible) cargarProviders();
   }, [visible, cargarProviders]);
 
+  // Cerrar el chat calla al asistente. El Modal solo se oculta —este componente sigue
+  // montado—, así que sin esto la voz seguiría sonando sobre la pantalla de atrás.
+  useEffect(() => {
+    if (!visible) callar();
+  }, [visible, callar]);
+
   const soloSaludo = mensajes.length === 1;
 
-  async function enviar(texto: string) {
+  /**
+   * `hablado` cambia dos cosas: el turno queda etiquetado como voz en la auditoría del
+   * backend, y la respuesta se lee en voz alta. Si escribiste, el teléfono se queda
+   * callado — nadie quiere que su banco se ponga a hablar solo en el bus.
+   */
+  async function enviar(texto: string, hablado = false) {
     const t = texto.trim();
     if (!t || enviando) return;
+
+    // Una pregunta nueva interrumpe la respuesta anterior: si no, el asistente sigue
+    // leyendo lo viejo mientras ya está pensando lo nuevo.
+    callar();
 
     const pendingId = nuevoId();
     setMensajes((m) => [
@@ -101,7 +125,25 @@ export default function AgentSheet({ visible, onClose, sessionId }: Props) {
     setEnviando(true);
 
     try {
-      const r = await enviarMensaje(t, sessionId, proveedor ?? undefined);
+      const r = hablado
+        ? await enviarMensajeHablado(t, sessionId, proveedor ?? undefined)
+        : await enviarMensaje(t, sessionId, proveedor ?? undefined);
+      // Sin voz española instalada, el motor leería el español con fonemas en inglés:
+      // se avisa una vez y la respuesta queda escrita, que es lo que importa.
+      if (hablado && !sinVoz) hablar(r.texto);
+      if (hablado && sinVoz) {
+        setMensajes((m) => [
+          ...m,
+          {
+            id: nuevoId(),
+            role: 'assistant',
+            texto:
+              'Te respondo escrito: este teléfono no tiene una voz en español instalada ' +
+              '(Ajustes → Idiomas → Salida de texto a voz).',
+            error: true,
+          },
+        ]);
+      }
       setMensajes((m) =>
         m.map((msg) =>
           msg.id === pendingId
@@ -163,7 +205,7 @@ export default function AgentSheet({ visible, onClose, sessionId }: Props) {
                 <View className="h-10 w-10 items-center justify-center rounded-2xl bg-brandAlpha-primarySoft">
                   <Ionicons name="sparkles" size={18} color={colores.primario} />
                 </View>
-                <Text className="text-body-md font-bold text-text-primary">Asistente</Text>
+                <Text className="text-body-md font-bold text-text-primary">Broki</Text>
               </View>
 
               {/* Selector de modelo (tiempo real) + cerrar */}
@@ -216,31 +258,56 @@ export default function AgentSheet({ visible, onClose, sessionId }: Props) {
               ) : null}
             </ScrollView>
 
-            {/* Barra de entrada */}
+            {/* Barra de entrada. Mientras el micrófono escucha, la onda ocupa el lugar
+                del campo: es el gesto de una nota de voz, y evita que alguien intente
+                escribir sobre un campo que se está llenando solo. */}
             <View className="flex-row items-end gap-2 border-t border-surface-border bg-surface-background px-4 py-3">
-              <TextInput
-                value={input}
-                onChangeText={setInput}
-                placeholder="Pregunta sobre tu propuesta…"
-                placeholderTextColor={colores.textoMuted}
-                multiline
-                onSubmitEditing={() => enviar(input)}
-                blurOnSubmit={false}
-                className="max-h-24 flex-1 rounded-2xl bg-surface-secondary px-4 py-2.5 text-body text-text-primary"
+              {escuchando ? null : (
+                <TextInput
+                  value={input}
+                  onChangeText={setInput}
+                  placeholder="Pregunta o toca el micrófono…"
+                  placeholderTextColor={colores.textoMuted}
+                  multiline
+                  onSubmitEditing={() => enviar(input)}
+                  blurOnSubmit={false}
+                  className="max-h-24 flex-1 rounded-2xl bg-surface-secondary px-4 py-2.5 text-body text-text-primary"
+                />
+              )}
+
+              <BotonVoz
+                onParcial={setInput}
+                onFinal={(t) => enviar(t, true)}
+                onError={(m) =>
+                  setMensajes((ms) => [
+                    ...ms,
+                    { id: nuevoId(), role: 'assistant', texto: m, error: true },
+                  ])
+                }
+                onEscuchando={setEscuchando}
+                deshabilitado={enviando}
               />
+
+              {/* Mientras habla, el mismo botón calla: es la acción más urgente que hay. */}
               <TouchableOpacity
-                onPress={() => enviar(input)}
-                disabled={!input.trim() || enviando}
+                onPress={() => (hablando ? callar() : enviar(input))}
+                disabled={!hablando && (!input.trim() || enviando)}
                 activeOpacity={0.8}
                 className={`h-11 w-11 items-center justify-center rounded-2xl ${
-                  !input.trim() || enviando ? 'bg-surface-divider' : 'bg-brand-primary'
+                  hablando
+                    ? 'bg-state-error'
+                    : !input.trim() || enviando
+                      ? 'bg-surface-divider'
+                      : 'bg-brand-primary'
                 }`}
               >
                 <Ionicons
-                  name="arrow-up"
+                  name={hablando ? 'volume-mute' : 'arrow-up'}
                   size={20}
                   color={
-                    !input.trim() || enviando ? colores.textoMuted : colores.textoSobrePrimario
+                    !hablando && (!input.trim() || enviando)
+                      ? colores.textoMuted
+                      : colores.textoSobrePrimario
                   }
                 />
               </TouchableOpacity>
