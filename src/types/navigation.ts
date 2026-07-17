@@ -51,6 +51,19 @@ export type InvestorStackParamList = {
   /** Lee la propuesta del usuario del token: no recibe un id que se pueda falsear. */
   Propuesta: undefined;
 
+  /**
+   * «Invertir ahora»: cursa la propuesta firmada y muestra la conexión con cada banco.
+   *
+   * El `proposalId` no es un permiso: el backend verifica que la propuesta sea del usuario
+   * del token, que un asesor la haya firmado y que no se haya invertido ya. Pasarlo a mano
+   * no cursa nada de nadie.
+   */
+  Invertir: { proposalId: string };
+  /** El comprobante de una orden ya cursada. */
+  Comprobante: { orderId: string };
+  /** Con quién tiene convenio Brokeate y cuánto cobra por intermediar. */
+  Convenios: undefined;
+
   ComoSeCalculo: ComoSeCalculoParams;
   /** Con `monto` (p. ej. desde una propuesta) las tasas llegan con interés calculado. */
   Comparador: { monto?: number } | undefined;

@@ -13,8 +13,11 @@ import RestablecerContrasenaPage from '@/app/auth/pages/RestablecerContrasenaPag
 import VerificarCorreoPage from '@/app/auth/pages/VerificarCorreoPage';
 import ComoSeCalculoPage from '@/app/inversionista/pages/ComoSeCalculoPage';
 import ComparadorPage from '@/app/inversionista/pages/ComparadorPage';
+import ComprobantePage from '@/app/inversionista/pages/ComprobantePage';
+import ConveniosPage from '@/app/inversionista/pages/ConveniosPage';
 import CuestionarioPage from '@/app/inversionista/pages/CuestionarioPage';
 import InicioPage from '@/app/inversionista/pages/InicioPage';
+import InvertirPage from '@/app/inversionista/pages/InvertirPage';
 import MercadosSimuladorPage from '@/app/inversionista/pages/MercadosSimuladorPage';
 import MisSubcuentasPage from '@/app/inversionista/pages/MisSubcuentasPage';
 import NoticiasPage from '@/app/inversionista/pages/NoticiasPage';
@@ -77,6 +80,17 @@ function InvestorStack() {
       <Investor.Screen name="Inicio" component={InicioPage} />
       <Investor.Screen name="Cuestionario" component={CuestionarioPage} />
       <Investor.Screen name="Propuesta" component={PropuestaPage} />
+
+      {/* Cursar la propuesta firmada. `gestureEnabled: false` en Invertir: la orden ya
+          salió hacia los bancos, y deslizar hacia atrás a media conexión dejaría al
+          usuario sin saber si pasó o no. Se sale por el comprobante. */}
+      <Investor.Screen
+        name="Invertir"
+        component={InvertirPage}
+        options={{ gestureEnabled: false }}
+      />
+      <Investor.Screen name="Comprobante" component={ComprobantePage} />
+      <Investor.Screen name="Convenios" component={ConveniosPage} />
 
       <Investor.Screen name="ComoSeCalculo" component={ComoSeCalculoPage} />
       <Investor.Screen name="Comparador" component={ComparadorPage} />

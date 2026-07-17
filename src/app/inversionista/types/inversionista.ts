@@ -135,6 +135,11 @@ export interface PortfolioProposal {
   retorno_esperado_anual: number | null;
   /** Lo único que redacta el LLM, y solo después de pasar el guardarraíl. */
   explicacion: string | null;
+
+  /** Quién firmó y cuándo. Nulos mientras está en revisión (nadie firmó todavía) y en las
+   *  rechazadas (no hay nada que respaldar). El cliente ve el nombre ANTES de invertir. */
+  advisor_nombre: string | null;
+  firmada_en: string | null;
 }
 
 // --- "¿Cómo se calculó?" (GET /api/investor/{id}/breakdown) ---------------

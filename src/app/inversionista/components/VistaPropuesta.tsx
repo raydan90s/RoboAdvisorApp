@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import Boton from '@/components/shared/Boton';
 import BotonAtras from '@/components/shared/BotonAtras';
 import Calificacion from '@/components/shared/Calificacion';
 import DisclaimerBanner from '@/components/shared/DisclaimerBanner';
@@ -23,13 +24,19 @@ import { useAuth } from '@/context/AuthContext';
 import { useColores } from '@/context/ThemeContext';
 import { ApiError } from '@/services/http';
 import type { InvestorStackParamList } from '@/types/navigation';
-import { plazo, porcentaje, puntos, usd } from '@/utils/formato';
+import { fechaHora, plazo, porcentaje, puntos, usd } from '@/utils/formato';
 
 import DonutPortafolio from './DonutPortafolio';
 import { getTasas } from '../services/catalogApi';
 import { editarAsignacion, getPropuesta } from '../services/investorApi';
+import { getOrdenDePropuesta } from '../services/ordersApi';
 import type { TasaInstrumento } from '../types/catalogo';
 import type { AssetAllocation, PortfolioProposal } from '../types/inversionista';
+import type { Orden } from '../types/orden';
+
+/** Los dos estados en los que un asesor ya firmó. 'edited' cuenta: la firmó Y la corrigió
+ *  con su nombre, así que está más revisada, no menos. */
+const FIRMADAS = ['approved', 'edited'];
 
 /** Una línea mientras se edita: el % es texto porque lo está escribiendo el usuario. */
 interface LineaEnEdicion {
@@ -140,6 +147,12 @@ export default function VistaPropuesta({ sessionId, titulo = 'Tu propuesta' }: P
   const [propuesta, setPropuesta] = useState<PortfolioProposal | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // La orden de esta propuesta, si ya se cursó. `null` no es un error: es lo que decide si
+  // se pinta "Invertir ahora" o "Ver mi comprobante". `undefined` = todavía no se sabe, y
+  // mientras tanto no se pinta ninguno de los dos — ofrecer invertir algo ya invertido
+  // sería prometer un 409.
+  const [orden, setOrden] = useState<Orden | null | undefined>(undefined);
+
   // --- Edición: el cliente agrega/quita fondos; el servidor valida y recalcula ---
   const [editando, setEditando] = useState(false);
   const [lineas, setLineas] = useState<LineaEnEdicion[]>([]);
@@ -154,7 +167,23 @@ export default function VistaPropuesta({ sessionId, titulo = 'Tu propuesta' }: P
     // eso sería un parpadeo a "Armando tu propuesta…" cada vez. El spinner es solo para
     // la primera carga, cuando todavía no hay nada que mostrar.
     try {
-      setPropuesta(await getPropuesta(user.id, sessionId));
+      const p = await getPropuesta(user.id, sessionId);
+      setPropuesta(p);
+
+      // Solo tiene sentido preguntar por la orden de una propuesta que se puede invertir:
+      // una en revisión no tiene ninguna, y sería un request por gusto en cada foco.
+      if (FIRMADAS.includes(p.estado)) {
+        try {
+          setOrden(await getOrdenDePropuesta(p.proposal_id));
+        } catch {
+          // Que falle esta consulta no puede tumbar la propuesta: la pantalla vale
+          // aunque no sepamos si ya se invirtió. Se cae a "sin orden conocida" y no se
+          // ofrece invertir — el backend es el que decide de todos modos.
+          setOrden(null);
+        }
+      } else {
+        setOrden(null);
+      }
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'No se pudo cargar tu propuesta.');
     }
@@ -285,6 +314,69 @@ export default function VistaPropuesta({ sessionId, titulo = 'Tu propuesta' }: P
             prompt, ya calculados, y el guardarraíl verificó que no inventara otros. Llega
             como un párrafo largo: `ExplicacionIA` lo abre en resumen + detalle. */}
         {propuesta.explicacion ? <ExplicacionIA texto={propuesta.explicacion} /> : null}
+
+        {/* --- El paso que antes no existía ---
+            Va acá, después de la explicación y antes del detalle, porque el orden es el
+            argumento: primero entiendes qué te proponen y quién lo firmó, y recién ahí
+            inviertes. Un botón arriba del todo sería la caja negra que este producto
+            existe para no ser.
+
+            Solo aparece si un asesor firmó (`FIRMADAS`). Mientras está en revisión no hay
+            botón, y eso NO es una decisión de esta pantalla: el backend responde 409 y hay
+            un trigger en Postgres que rechaza la orden. Acá solo se refleja. */}
+        {FIRMADAS.includes(propuesta.estado) && orden !== undefined ? (
+          orden ? (
+            <FilaAccion
+              icono="receipt-outline"
+              titulo="Ver mi comprobante"
+              detalle={`Ya invertiste ${usd(orden.monto_total)} en ${orden.lineas.length} ${
+                orden.lineas.length === 1 ? 'institución' : 'instituciones'
+              }.`}
+              onPress={() =>
+                navigation.navigate('Comprobante', { orderId: orden.order_id })
+              }
+            />
+          ) : (
+            <View className="gap-3 rounded-2xl border border-brand-primary bg-surface-background p-5">
+              {/* Con nombre y fecha, no "un asesor". Es la diferencia entre "esto lo
+                  aprobó el sistema" y "esta persona respondió por tu cartera" — y el
+                  cliente tiene que verlo ANTES de invertir, no en el comprobante. */}
+              <View className="flex-row items-center gap-3">
+                <View className="h-10 w-10 items-center justify-center rounded-full bg-brandAlpha-primarySoft">
+                  <Ionicons name="shield-checkmark" size={18} color={colores.exito} />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-caption text-text-muted">
+                    {propuesta.estado === 'edited'
+                      ? 'Revisada y ajustada por'
+                      : 'Revisada y aprobada por'}
+                  </Text>
+                  <Text className="text-body-md font-bold text-text-primary">
+                    {propuesta.advisor_nombre ?? 'Un asesor de Brokeate'}
+                  </Text>
+                  {propuesta.firmada_en ? (
+                    <Text className="text-caption text-text-muted">
+                      Asesor de Brokeate · {fechaHora(propuesta.firmada_en)}
+                    </Text>
+                  ) : (
+                    <Text className="text-caption text-text-muted">Asesor de Brokeate</Text>
+                  )}
+                </View>
+              </View>
+
+              <Text className="text-caption leading-4 text-text-secondary">
+                Al invertir, tu cartera se convierte en una orden por cada institución. No
+                pagas nada: la comisión la paga la institución.
+              </Text>
+              <Boton
+                titulo="Invertir ahora"
+                onPress={() =>
+                  navigation.navigate('Invertir', { proposalId: propuesta.proposal_id })
+                }
+              />
+            </View>
+          )
+        ) : null}
 
         <View className="mt-2 flex-row items-center justify-between">
           <Text className="text-caption font-bold uppercase text-text-secondary">
@@ -465,6 +557,16 @@ export default function VistaPropuesta({ sessionId, titulo = 'Tu propuesta' }: P
                 monto: propuesta.monto_total ?? undefined,
               })
             }
+          />
+
+          {/* La pregunta que el cliente se hace y casi nunca puede hacer: "¿y tú qué ganas
+              con esto?". Está al lado de la propuesta, no escondida en un menú de ajustes,
+              porque es parte de entender la recomendación. */}
+          <FilaAccion
+            icono="shield-checkmark-outline"
+            titulo="¿Cómo gana Brokeate?"
+            detalle="Con quién tenemos convenio y cuánto cobramos. Tú no pagas nada."
+            onPress={() => navigation.navigate('Convenios')}
           />
         </View>
 
