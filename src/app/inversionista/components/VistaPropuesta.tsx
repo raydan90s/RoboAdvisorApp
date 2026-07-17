@@ -28,7 +28,7 @@ import { fechaHora, plazo, porcentaje, puntos, usd } from '@/utils/formato';
 
 import DonutPortafolio from './DonutPortafolio';
 import { getTasas } from '../services/catalogApi';
-import { editarAsignacion, getPropuesta } from '../services/investorApi';
+import { editarAsignacion, getPropuesta, refutarPropuesta } from '../services/investorApi';
 import { getOrdenDePropuesta } from '../services/ordersApi';
 import type { TasaInstrumento } from '../types/catalogo';
 import type { AssetAllocation, PortfolioProposal } from '../types/inversionista';
@@ -160,6 +160,12 @@ export default function VistaPropuesta({ sessionId, titulo = 'Tu propuesta' }: P
   const [guardando, setGuardando] = useState(false);
   const [errorEdicion, setErrorEdicion] = useState<string | null>(null);
 
+  // --- Refutación: el cliente devuelve la decisión firmada a la cola del asesor ---
+  const [refutando, setRefutando] = useState(false);
+  const [motivoRefutacion, setMotivoRefutacion] = useState('');
+  const [enviandoRefutacion, setEnviandoRefutacion] = useState(false);
+  const [errorRefutacion, setErrorRefutacion] = useState<string | null>(null);
+
   const cargar = useCallback(async () => {
     if (!user) return;
     setError(null);
@@ -224,6 +230,28 @@ export default function VistaPropuesta({ sessionId, titulo = 'Tu propuesta' }: P
     0,
   );
   const sumaValida = Math.abs(suma - 100) < 0.005 && lineas.length > 0;
+
+  async function enviarRefutacion(p: PortfolioProposal) {
+    const texto = motivoRefutacion.trim();
+    if (!texto || enviandoRefutacion) return;
+    setErrorRefutacion(null);
+    setEnviandoRefutacion(true);
+    try {
+      await refutarPropuesta(p.proposal_id, texto);
+      setRefutando(false);
+      setMotivoRefutacion('');
+      // La propuesta volvió a `pending_review`: recargar hace desaparecer la tarjeta de
+      // la firma y reaparecer "Editar mi mezcla" — el mismo estado que pinta el GET.
+      await cargar();
+    } catch (e) {
+      // El servidor puede responder 409 (ya se invirtió, o el estado cambió debajo).
+      setErrorRefutacion(
+        e instanceof ApiError ? e.message : 'No se pudo enviar tu refutación.',
+      );
+    } finally {
+      setEnviandoRefutacion(false);
+    }
+  }
 
   async function guardarEdicion(p: PortfolioProposal) {
     if (!sumaValida || guardando) return;
@@ -374,6 +402,88 @@ export default function VistaPropuesta({ sessionId, titulo = 'Tu propuesta' }: P
                   navigation.navigate('Invertir', { proposalId: propuesta.proposal_id })
                 }
               />
+
+              {/* --- Refutar: la plata es del cliente ---
+                  El asesor firma, pero la firma no obliga: mientras no haya una orden
+                  cursada, el cliente puede devolver la decisión a la cola con su motivo.
+                  Va DENTRO de la tarjeta de la firma porque es la respuesta a esa firma:
+                  "esta persona respondió por tu cartera — ¿y si no estás de acuerdo?". */}
+              {!refutando ? (
+                <TouchableOpacity
+                  onPress={() => {
+                    setErrorRefutacion(null);
+                    setRefutando(true);
+                  }}
+                  activeOpacity={0.85}
+                  className="flex-row items-center justify-center gap-2 rounded-2xl border border-surface-border py-4"
+                >
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={18}
+                    color={colores.textoMuted}
+                  />
+                  <Text className="text-body-md font-bold text-text-secondary">
+                    No estoy de acuerdo
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <View className="gap-3 border-t border-surface-border pt-4">
+                  <Text className="text-body-md font-bold text-text-primary">
+                    Cuéntale al asesor qué no te convence
+                  </Text>
+                  <Text className="text-caption leading-4 text-text-secondary">
+                    Tu propuesta volverá a revisión: podrás editar tu mezcla y el asesor
+                    decidirá de nuevo con tu motivo a la vista. Su decisión anterior queda
+                    en el historial.
+                  </Text>
+                  <TextInput
+                    value={motivoRefutacion}
+                    onChangeText={setMotivoRefutacion}
+                    placeholder="Ej.: prefiero más liquidez y menos plazo fijo…"
+                    placeholderTextColor={colores.textoMuted}
+                    multiline
+                    numberOfLines={3}
+                    textAlignVertical="top"
+                    className="min-h-20 rounded-xl border border-surface-border bg-surface-elevated px-3 py-2 text-body text-text-primary"
+                  />
+
+                  {errorRefutacion ? (
+                    <View className="rounded-2xl bg-stateAlpha-errorSoft px-4 py-3">
+                      <Text className="text-body text-state-error">{errorRefutacion}</Text>
+                    </View>
+                  ) : null}
+
+                  <TouchableOpacity
+                    onPress={() => void enviarRefutacion(propuesta)}
+                    disabled={!motivoRefutacion.trim() || enviandoRefutacion}
+                    activeOpacity={0.85}
+                    className={`items-center rounded-2xl py-4 ${
+                      motivoRefutacion.trim() ? 'bg-brand-primary' : 'bg-surface-secondary'
+                    }`}
+                  >
+                    {enviandoRefutacion ? (
+                      <ActivityIndicator color={colores.textoSobrePrimario} />
+                    ) : (
+                      <Text
+                        className={`text-body-md font-bold ${
+                          motivoRefutacion.trim() ? 'text-text-onPrimary' : 'text-text-muted'
+                        }`}
+                      >
+                        Devolver al asesor
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() => setRefutando(false)}
+                    disabled={enviandoRefutacion}
+                    activeOpacity={0.7}
+                    className="items-center py-1"
+                  >
+                    <Text className="text-body text-text-secondary">Cancelar</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
           )
         ) : null}

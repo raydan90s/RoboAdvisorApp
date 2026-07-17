@@ -7,6 +7,7 @@ import type {
   PortfolioProposal,
   Pregunta,
   ProfilingBreakdown,
+  RefutacionResultado,
   ResumenCapital,
 } from '../types/inversionista';
 
@@ -58,6 +59,24 @@ export function editarAsignacion(
   return http.put<PortfolioProposal>(
     `/api/investor/proposals/${proposalId}/allocation`,
     { allocations },
+  );
+}
+
+/**
+ * El cliente no está de acuerdo con lo que el asesor firmó y lo devuelve a la cola.
+ *
+ * Solo sobre 'approved'/'edited' y solo si todavía no hay una orden cursada (la plata
+ * que ya salió no se deshace refutando). El motivo es obligatorio: es lo que el asesor
+ * va a leer antes de decidir de nuevo. La decisión refutada no se borra — queda en el
+ * historial de la propuesta, con la refutación al lado.
+ */
+export function refutarPropuesta(
+  proposalId: string,
+  comments: string,
+): Promise<RefutacionResultado> {
+  return http.post<RefutacionResultado>(
+    `/api/investor/proposals/${proposalId}/refute`,
+    { comments },
   );
 }
 

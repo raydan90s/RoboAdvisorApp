@@ -65,6 +65,15 @@ export interface RevisionPrevia {
   decided_at: string;
 }
 
+/** Una refutación del inversionista: por qué devolvió a la cola una decisión firmada. */
+export interface RefutacionPrevia {
+  comments: string | null;
+  /** Qué decisión estaba contestando ('approved' o 'edited'). */
+  estado_refutado: string | null;
+  investor_nombre: string | null;
+  refutada_en: string;
+}
+
 export interface PropuestaDetalle {
   proposal_id: string;
   session_id: string;
@@ -89,6 +98,8 @@ export interface PropuestaDetalle {
   banderas: string[];
 
   revisiones: RevisionPrevia[];
+  /** Las veces que el cliente devolvió una decisión firmada, con su motivo. */
+  refutaciones: RefutacionPrevia[];
 }
 
 // --- Decisión (POST /api/advisor/proposals/{id}/review) ------------------

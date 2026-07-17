@@ -381,6 +381,33 @@ export default function DetallePropuestaPage({ navigation, route }: Props) {
             />
           ) : null}
 
+          {/* Refutaciones: el cliente devolvió una decisión firmada, y este es su motivo.
+              Va antes del historial y con estilo de aviso porque ES la razón por la que
+              esta propuesta está de nuevo en la cola: la segunda decisión tiene que
+              responder al reclamo, no repetir la primera. */}
+          {detalle.refutaciones.length > 0 ? (
+            <View className="gap-2 rounded-2xl bg-stateAlpha-warningSoft p-5">
+              <View className="flex-row items-center gap-2">
+                <Ionicons name="chatbox-ellipses" size={16} color={colores.advertencia} />
+                <Text className="text-caption font-bold uppercase text-text-primary">
+                  El cliente no estuvo de acuerdo
+                </Text>
+              </View>
+              {detalle.refutaciones.map((ref) => (
+                <View key={ref.refutada_en} className="gap-1">
+                  <Text className="text-body leading-5 text-text-primary">
+                    “{ref.comments ?? 'Sin motivo registrado.'}”
+                  </Text>
+                  <Text className="text-caption text-text-muted">
+                    {ref.investor_nombre ?? 'El cliente'} devolvió la propuesta{' '}
+                    {ref.estado_refutado === 'edited' ? 'editada' : 'aprobada'} ·{' '}
+                    {fechaHora(ref.refutada_en)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+
           {/* Historial: fecha · versión de reglas · responsable. El criterio de la HU3. */}
           {detalle.revisiones.length > 0 ? (
             <View className="gap-3 rounded-2xl border border-surface-border bg-surface-background p-5">
@@ -407,8 +434,9 @@ export default function DetallePropuestaPage({ navigation, route }: Props) {
           {yaDecidida ? (
             <View className="rounded-2xl border border-surface-border bg-surface-background p-5">
               <Text className="text-body text-text-secondary">
-                Esta propuesta ya fue decidida. Una decisión no se sobrescribe: si hace
-                falta cambiarla, el cliente debe perfilarse de nuevo.
+                Esta propuesta ya fue decidida. Una decisión no se sobrescribe: si el
+                cliente no está de acuerdo, puede refutarla desde su app (mientras no haya
+                invertido) y la propuesta volverá a esta cola con su motivo.
               </Text>
             </View>
           ) : (

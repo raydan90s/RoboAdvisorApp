@@ -142,6 +142,17 @@ export interface PortfolioProposal {
   firmada_en: string | null;
 }
 
+/** Respuesta del POST /api/investor/proposals/{id}/refute. */
+export interface RefutacionResultado {
+  proposal_id: string;
+  /** Siempre 'pending_review': refutar devuelve la propuesta a la cola del asesor. */
+  estado: EstadoPropuesta;
+  /** La decisión que se refutó ('approved' o 'edited'). */
+  estado_anterior: EstadoPropuesta;
+  comments: string;
+  refutada_en: string;
+}
+
 // --- "¿Cómo se calculó?" (GET /api/investor/{id}/breakdown) ---------------
 
 export interface BreakdownRespuesta {
